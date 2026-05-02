@@ -10,7 +10,8 @@ import {
 } from '@mui/material';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
-import { useNavigate } from 'react-router-dom';
+import { getImageUrl } from '../lib/imageUrl';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import { useSnackbar } from 'notistack';
 import { cartService } from '../services/cartService';
@@ -24,6 +25,7 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, onWishlistToggle, onAddToCart }: ProductCardProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { enqueueSnackbar } = useSnackbar();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const wishlistItems = useAppSelector((state) => state.wishlist.items);
@@ -36,7 +38,7 @@ export const ProductCard = ({ product, onWishlistToggle, onAddToCart }: ProductC
     e.stopPropagation();
     if (!isAuthenticated || !user) {
       enqueueSnackbar('Please login to add items to cart', { variant: 'warning' });
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname } });
       return;
     }
 
@@ -53,7 +55,7 @@ export const ProductCard = ({ product, onWishlistToggle, onAddToCart }: ProductC
     e.stopPropagation();
     if (!isAuthenticated || !user) {
       enqueueSnackbar('Please login to add to wishlist', { variant: 'warning' });
-      navigate('/login');
+      navigate('/login', { state: { from: location.pathname } });
       return;
     }
 
@@ -91,7 +93,7 @@ export const ProductCard = ({ product, onWishlistToggle, onAddToCart }: ProductC
         <CardMedia
           component="img"
           height="240"
-          image={product.images[0] || 'https://via.placeholder.com/400x300'}
+          image={getImageUrl(product.images?.[0], 'https://via.placeholder.com/400x300')}
           alt={product.name}
           sx={{ objectFit: 'cover' }}
         />

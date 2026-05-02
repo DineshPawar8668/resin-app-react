@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import { Box, CircularProgress } from '@mui/material';
 
@@ -9,8 +9,9 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
   const { isAuthenticated, loading, user } = useAppSelector((state) => state.auth);
+  const location = useLocation();
 
-  if (loading) {
+  if (loading && !isAuthenticated) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <CircularProgress />
@@ -19,7 +20,7 @@ export const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRoutePr
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   if (adminOnly && !user?.is_admin) {

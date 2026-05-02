@@ -15,6 +15,11 @@ import { Checkout } from "./pages/Checkout";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Admin } from "./pages/Admin";
+import { Profile } from "./pages/Profile";
+import { ChangePassword } from "./pages/ChangePassword";
+import { Categories } from "./pages/Categories";
+import { AdminProducts } from "./pages/AdminProducts";
+import { AdminProductForm } from "./pages/AdminProductForm";
 import { useEffect } from "react";
 import { cartService } from "./services/cartService";
 import { wishlistService } from "./services/wishlistService";
@@ -113,6 +118,54 @@ function App() {
                 element={
                   <ProtectedRoute adminOnly>
                     <Admin />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/categories"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <Categories />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/products"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <AdminProducts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/products/create"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <AdminProductForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/products/:id/edit"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <AdminProductForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/change-password"
+                element={
+                  <ProtectedRoute>
+                    <ChangePassword />
                   </ProtectedRoute>
                 }
               />

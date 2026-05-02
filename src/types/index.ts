@@ -1,9 +1,37 @@
+export enum ProductType {
+  REGULAR = 0,
+  FEATURED = 1,
+  DEAL_OF_THE_DAY = 2,
+}
+
+export interface ProductItem {
+  id: string;
+  image: string;
+  title: string;
+  description: string;
+  price: number;
+  discountpercent: number;
+  offerprice: number;
+  product_type: ProductType;
+  category_id?: string;
+  is_active: boolean;
+  is_deleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Category {
+  _id?: string;
   id: string;
   name: string;
   description: string;
-  image_url: string;
-  created_at: string;
+  image?: string;
+  image_url?: string;
+  is_active?: boolean;
+  is_deleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  created_at?: string;
 }
 
 export interface Product {
@@ -91,7 +119,8 @@ export interface OrderItem {
 export interface UserProfile {
   id: string;
   email: string;
-  full_name: string;
+  name?: string;
+  full_name?: string;
   avatar_url?: string;
   is_admin: boolean;
   created_at: string;

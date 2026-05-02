@@ -1,52 +1,46 @@
 import { useState } from 'react';
-import {
-  Box,
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Link as MuiLink,
-  Divider,
-  alpha,
-  useTheme,
-} from '@mui/material';
+import { Box, Typography, TextField, Button, Link as MuiLink } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSnackbar } from 'notistack';
 
+const PINK = {
+  600: '#C2185B',
+  500: '#E91E8C',
+};
+
 const validationSchema = yup.object({
-  fullName: yup.string().required('Full name is required'),
+  name: yup.string().required('Name is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
-  password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-  confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match').required('Confirm password is required'),
+  password: yup.string().min(6, 'Minimum 6 characters').required('Password is required'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password')], 'Passwords must match')
+    .required('Please confirm your password'),
 });
 
 export const Register = () => {
   const navigate = useNavigate();
-  const theme = useTheme();
   const { signUp } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(false);
 
   const formik = useFormik({
-    initialValues: {
-      fullName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
+    initialValues: { name: '', email: '', password: '', confirmPassword: '' },
     validationSchema,
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        await signUp(values.email, values.password, values.fullName);
-        enqueueSnackbar('Account created successfully!', { variant: 'success' });
-        navigate('/');
-      } catch (error: any) {
-        enqueueSnackbar(error.message || 'Failed to create account', { variant: 'error' });
+        await signUp(values.email, values.password, values.name);
+        enqueueSnackbar('Account created! Please sign in.', { variant: 'success' });
+        navigate('/login');
+      } catch (err: any) {
+        enqueueSnackbar(
+          err.response?.data?.message || err.message || 'Registration failed',
+          { variant: 'error' }
+        );
       } finally {
         setLoading(false);
       }
@@ -54,58 +48,71 @@ export const Register = () => {
   });
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)`,
-        py: 4,
-      }}
-    >
-      <Container maxWidth="sm">
-        <Paper
-          elevation={0}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            backdropFilter: 'blur(10px)',
-          }}
-        >
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography
-              variant="h4"
-              gutterBottom
-              fontWeight={700}
-              sx={{
-                background: 'linear-gradient(45deg, #FF9A8B 30%, #A8E6CF 90%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Create Account
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Join us and start shopping beautiful resin art
-            </Typography>
-          </Box>
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      {/* LEFT — decorative image panel */}
+      <Box
+        sx={{
+          flex: 1,
+          display: { xs: 'none', md: 'flex' },
+          flexDirection: 'column',
+          justifyContent: 'center',
+          px: 8,
+          color: '#fff',
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1579965342575-16428a7c8881')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          position: 'relative',
+        }}
+      >
+        <Box sx={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} />
+        <Box sx={{ position: 'relative', zIndex: 2 }}>
+          <Typography fontSize={48} fontWeight={800} mb={2}>
+            Join Us
+          </Typography>
+          <Typography maxWidth={400} sx={{ opacity: 0.8 }}>
+            Create an account and start discovering beautiful handcrafted resin art.
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* RIGHT — form */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          px: 3,
+        }}
+      >
+        <Box sx={{ width: '100%', maxWidth: 380 }}>
+          <Typography fontSize={28} fontWeight={700} mb={1}>
+            Create Account
+          </Typography>
+          <Typography fontSize={14} color="text.secondary" mb={3}>
+            Already have an account?{' '}
+            <MuiLink component={Link} to="/login" underline="hover" fontWeight={600} color={PINK[500]}>
+              Sign in
+            </MuiLink>
+          </Typography>
 
           <form onSubmit={formik.handleSubmit}>
             <TextField
               fullWidth
-              name="fullName"
-              label="Full Name"
+              placeholder="Full Name"
+              name="name"
               margin="normal"
-              value={formik.values.fullName}
+              value={formik.values.name}
               onChange={formik.handleChange}
-              error={formik.touched.fullName && Boolean(formik.errors.fullName)}
-              helperText={formik.touched.fullName && formik.errors.fullName}
+              error={formik.touched.name && Boolean(formik.errors.name)}
+              helperText={formik.touched.name && formik.errors.name}
             />
 
             <TextField
               fullWidth
+              placeholder="Email Address"
               name="email"
-              label="Email"
               type="email"
               margin="normal"
               value={formik.values.email}
@@ -116,9 +123,9 @@ export const Register = () => {
 
             <TextField
               fullWidth
-              name="password"
-              label="Password"
+              placeholder="Password"
               type="password"
+              name="password"
               margin="normal"
               value={formik.values.password}
               onChange={formik.handleChange}
@@ -128,9 +135,9 @@ export const Register = () => {
 
             <TextField
               fullWidth
-              name="confirmPassword"
-              label="Confirm Password"
+              placeholder="Confirm Password"
               type="password"
+              name="confirmPassword"
               margin="normal"
               value={formik.values.confirmPassword}
               onChange={formik.handleChange}
@@ -139,33 +146,23 @@ export const Register = () => {
             />
 
             <Button
+              fullWidth
               type="submit"
               variant="contained"
-              fullWidth
-              size="large"
               disabled={loading}
-              sx={{ mt: 3, mb: 2 }}
+              sx={{
+                mt: 3,
+                background: PINK[500],
+                '&:hover': { background: PINK[600] },
+                py: 1.2,
+                fontWeight: 600,
+              }}
             >
-              {loading ? 'Creating Account...' : 'Sign Up'}
+              {loading ? 'Creating Account…' : 'Create Account'}
             </Button>
           </form>
-
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              OR
-            </Typography>
-          </Divider>
-
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              Already have an account?{' '}
-              <MuiLink component={Link} to="/login" underline="hover" fontWeight={600}>
-                Login
-              </MuiLink>
-            </Typography>
-          </Box>
-        </Paper>
-      </Container>
+        </Box>
+      </Box>
     </Box>
   );
 };
