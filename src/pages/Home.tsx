@@ -34,6 +34,7 @@ import {
   Tag,
   Grid3X3,
 } from "lucide-react";
+import { BASE_URL } from "../constant";
 
 /* ─── PINK PALETTE ─────────────────────────────── */
 const PINK = {
@@ -356,104 +357,104 @@ const CAT_ICONS = [
   },
 ];
 
-const DEALS = [
-  {
-    name: "Resin Coaster Set",
-    discount: "70% off",
-    price: "299",
-    originalPrice: "999",
-    boughtCount: "400+",
-    img: "https://images.pexels.com/photos/5591663/pexels-photo-5591663.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Ocean Wave Resin Art",
-    discount: "65% off",
-    price: "699",
-    originalPrice: "1,999",
-    boughtCount: "1K+",
-    img: "https://images.pexels.com/photos/3094799/pexels-photo-3094799.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Floral Keychain",
-    discount: "55% off",
-    price: "185",
-    originalPrice: "499",
-    boughtCount: "700+",
-    img: "https://images.pexels.com/photos/1070534/pexels-photo-1070534.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Geode Resin Tray",
-    discount: "60% off",
-    price: "900",
-    originalPrice: "2,249",
-    boughtCount: "700+",
-    img: "https://images.pexels.com/photos/1148957/pexels-photo-1148957.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Galaxy Resin Clock",
-    discount: "50% off",
-    price: "584",
-    originalPrice: "1,168",
-    boughtCount: "100+",
-    img: "https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Pearl Drop Earrings",
-    discount: "45% off",
-    price: "854",
-    originalPrice: "1,553",
-    boughtCount: "200+",
-    img: "https://images.pexels.com/photos/1458329/pexels-photo-1458329.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Resin Coaster Set",
-    discount: "70% off",
-    price: "299",
-    originalPrice: "999",
-    boughtCount: "400+",
-    img: "https://images.pexels.com/photos/5591663/pexels-photo-5591663.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Ocean Wave Resin Art",
-    discount: "65% off",
-    price: "699",
-    originalPrice: "1,999",
-    boughtCount: "1K+",
-    img: "https://images.pexels.com/photos/3094799/pexels-photo-3094799.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Floral Keychain",
-    discount: "55% off",
-    price: "185",
-    originalPrice: "499",
-    boughtCount: "700+",
-    img: "https://images.pexels.com/photos/1070534/pexels-photo-1070534.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Geode Resin Tray",
-    discount: "60% off",
-    price: "900",
-    originalPrice: "2,249",
-    boughtCount: "700+",
-    img: "https://images.pexels.com/photos/1148957/pexels-photo-1148957.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Galaxy Resin Clock",
-    discount: "50% off",
-    price: "584",
-    originalPrice: "1,168",
-    boughtCount: "100+",
-    img: "https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&w=300",
-  },
-  {
-    name: "Pearl Drop Earrings",
-    discount: "45% off",
-    price: "854",
-    originalPrice: "1,553",
-    boughtCount: "200+",
-    img: "https://images.pexels.com/photos/1458329/pexels-photo-1458329.jpeg?auto=compress&w=300",
-  },
-];
+// const deals = [
+//   {
+//     name: "Resin Coaster Set",
+//     discount: "70% off",
+//     price: "299",
+//     originalPrice: "999",
+//     boughtCount: "400+",
+//     img: "https://images.pexels.com/photos/5591663/pexels-photo-5591663.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Ocean Wave Resin Art",
+//     discount: "65% off",
+//     price: "699",
+//     originalPrice: "1,999",
+//     boughtCount: "1K+",
+//     img: "https://images.pexels.com/photos/3094799/pexels-photo-3094799.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Floral Keychain",
+//     discount: "55% off",
+//     price: "185",
+//     originalPrice: "499",
+//     boughtCount: "700+",
+//     img: "https://images.pexels.com/photos/1070534/pexels-photo-1070534.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Geode Resin Tray",
+//     discount: "60% off",
+//     price: "900",
+//     originalPrice: "2,249",
+//     boughtCount: "700+",
+//     img: "https://images.pexels.com/photos/1148957/pexels-photo-1148957.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Galaxy Resin Clock",
+//     discount: "50% off",
+//     price: "584",
+//     originalPrice: "1,168",
+//     boughtCount: "100+",
+//     img: "https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Pearl Drop Earrings",
+//     discount: "45% off",
+//     price: "854",
+//     originalPrice: "1,553",
+//     boughtCount: "200+",
+//     img: "https://images.pexels.com/photos/1458329/pexels-photo-1458329.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Resin Coaster Set",
+//     discount: "70% off",
+//     price: "299",
+//     originalPrice: "999",
+//     boughtCount: "400+",
+//     img: "https://images.pexels.com/photos/5591663/pexels-photo-5591663.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Ocean Wave Resin Art",
+//     discount: "65% off",
+//     price: "699",
+//     originalPrice: "1,999",
+//     boughtCount: "1K+",
+//     img: "https://images.pexels.com/photos/3094799/pexels-photo-3094799.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Floral Keychain",
+//     discount: "55% off",
+//     price: "185",
+//     originalPrice: "499",
+//     boughtCount: "700+",
+//     img: "https://images.pexels.com/photos/1070534/pexels-photo-1070534.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Geode Resin Tray",
+//     discount: "60% off",
+//     price: "900",
+//     originalPrice: "2,249",
+//     boughtCount: "700+",
+//     img: "https://images.pexels.com/photos/1148957/pexels-photo-1148957.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Galaxy Resin Clock",
+//     discount: "50% off",
+//     price: "584",
+//     originalPrice: "1,168",
+//     boughtCount: "100+",
+//     img: "https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&w=300",
+//   },
+//   {
+//     name: "Pearl Drop Earrings",
+//     discount: "45% off",
+//     price: "854",
+//     originalPrice: "1,553",
+//     boughtCount: "200+",
+//     img: "https://images.pexels.com/photos/1458329/pexels-photo-1458329.jpeg?auto=compress&w=300",
+//   },
+// ];
 
 const TESTIMONIALS = [
   {
@@ -548,6 +549,7 @@ const FALLBACK_PRODUCTS = [
 export const Home = () => {
   const navigate = useNavigate();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [deals, setDeals] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([]);
   const [slide, setSlide] = useState(0);
   const [cartCount] = useState(2);
@@ -558,6 +560,8 @@ export const Home = () => {
         productService.getProducts(),
         productService.getCategories(),
       ]);
+      // console.log(products, cats)
+      setDeals(products);
       setFeaturedProducts(products.filter((p) => p.is_featured).slice(0, 8));
       setCategories(cats);
     } catch (error) {
@@ -565,9 +569,16 @@ export const Home = () => {
     }
   };
 
+  console.log("products", featuredProducts)
+  console.log("cats", categories)
+
   const prevSlide = () =>
     setSlide((s) => (s - 1 + BANNERS.length) % BANNERS.length);
   const nextSlide = () => setSlide((s) => (s + 1) % BANNERS.length);
+
+  useEffect(() => {
+    loadData()
+  }, [])
 
   return (
     <Box
@@ -588,21 +599,19 @@ export const Home = () => {
             gap: 4,
           }}
         >
-          {(categories.length
-            ? categories.map((c) => ({ label: c.name, img: c.image_url }))
-            : CAT_ICONS
-          ).map((c, i) => (
-            <div
-              key={i}
-              style={styles.catItem}
-              onClick={() => navigate(`/products?category=${i + 1}`)}
-              onMouseEnter={(e) => (e.currentTarget.style.color = PINK[500])}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#333")}
-            >
-              <img src={c.img} alt={c.label} style={styles.catIcon} />
-              <span style={styles.catLabel}>{c.label}</span>
-            </div>
-          ))}
+          {categories?.length > 0 && categories.map((c) => ({ label: c.name, img: c.image }))
+            .map((c, i) => (
+              <div
+                key={i}
+                style={styles.catItem}
+                onClick={() => navigate(`/products?category=${i + 1}`)}
+                onMouseEnter={(e) => (e.currentTarget.style.color = PINK[500])}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#333")}
+              >
+                <img src={c.img} alt={c.label} style={styles.catIcon} />
+                <span style={styles.catLabel}>{c.label}</span>
+              </div>
+            ))}
         </div>
       </div>
 
@@ -773,7 +782,7 @@ export const Home = () => {
               "&::-webkit-scrollbar": { display: "none" },
             }}
           >
-            {DEALS.map((d, i) => (
+            {deals.map((d, i) => (
               <Box
                 key={i}
                 onClick={() => navigate("/products")}
@@ -783,7 +792,7 @@ export const Home = () => {
                   flexShrink: 0,
                   padding: "14px 10px",
                   borderRight:
-                    i < DEALS.length - 1 ? "1px solid #f5f5f5" : "none",
+                    i < deals.length - 1 ? "1px solid #f5f5f5" : "none",
                   cursor: "pointer",
                   transition: "box-shadow 0.2s",
                   "&:hover": { boxShadow: `inset 0 -3px 0 ${PINK[400]}` },
@@ -802,7 +811,7 @@ export const Home = () => {
                 >
                   <Box
                     component="img"
-                    src={d.img}
+                    src={`${BASE_URL}${d.images[0]}`}
                     alt={d.name}
                     sx={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -940,175 +949,166 @@ export const Home = () => {
               "&::-webkit-scrollbar": { display: "none" },
             }}
           >
-            {(featuredProducts.length
-              ? featuredProducts
-              : FALLBACK_PRODUCTS
-            ).map((product: any, i: number) => {
-              // ✅ FIX: Proper image handling
-              const BASE_URL = import.meta.env.VITE_APP_BASE_URL || "";
-              const imageSrc = product?.image_url
-                ? product.image_url.startsWith("http")
-                  ? product.image_url
-                  : `${BASE_URL}${product.image_url}`
-                : product?.img ||
-                  product?.image ||
-                  "https://via.placeholder.com/200";
+            {featuredProducts.length > 0 && featuredProducts
+              .map((product: any, i: number) => {
+                // ✅ FIX: Proper image handling
+                const BASE_URL = import.meta.env.VITE_APP_BASE_URL || "";
+                const imageSrc = `${BASE_URL}${product.images[0]}`;
+                return (
+                  <Box
+                    key={i}
+                    onClick={() =>
+                      navigate(
+                        product?.id ? `/products/${product.id}` : "/products",
+                      )
+                    }
+                    sx={{
+                      minWidth: 190,
+                      maxWidth: 190,
+                      flexShrink: 0,
+                      padding: "12px 10px 14px",
+                      borderRight:
+                        i <
+                          (featuredProducts.length || FALLBACK_PRODUCTS.length) - 1
+                          ? "1px solid #f5f5f5"
+                          : "none",
+                      cursor: "pointer",
+                      position: "relative",
+                      transition: "box-shadow 0.2s",
+                      "&:hover": { boxShadow: `inset 0 -3px 0 ${PINK[400]}` },
+                    }}
+                  >
+                    {/* Badge */}
+                    {product?.badge && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 16,
+                          left: 10,
+                          zIndex: 2,
+                          background:
+                            product.badge === "New" ? PINK[500] : "#C0392B",
+                          color: "#fff",
+                          fontSize: 9,
+                          fontWeight: 700,
+                          px: "6px",
+                          py: "2px",
+                          borderRadius: "3px",
+                        }}
+                      >
+                        {product.badge}
+                      </Box>
+                    )}
 
-              return (
-                <Box
-                  key={i}
-                  onClick={() =>
-                    navigate(
-                      product?.id ? `/products/${product.id}` : "/products",
-                    )
-                  }
-                  sx={{
-                    minWidth: 190,
-                    maxWidth: 190,
-                    flexShrink: 0,
-                    padding: "12px 10px 14px",
-                    borderRight:
-                      i <
-                      (featuredProducts.length || FALLBACK_PRODUCTS.length) - 1
-                        ? "1px solid #f5f5f5"
-                        : "none",
-                    cursor: "pointer",
-                    position: "relative",
-                    transition: "box-shadow 0.2s",
-                    "&:hover": { boxShadow: `inset 0 -3px 0 ${PINK[400]}` },
-                  }}
-                >
-                  {/* Badge */}
-                  {product?.badge && (
+                    {/* Wishlist */}
                     <Box
+                      onClick={(e) => e.stopPropagation()}
                       sx={{
                         position: "absolute",
                         top: 16,
-                        left: 10,
+                        right: 10,
                         zIndex: 2,
-                        background:
-                          product.badge === "New" ? PINK[500] : "#C0392B",
-                        color: "#fff",
-                        fontSize: 9,
-                        fontWeight: 700,
-                        px: "6px",
-                        py: "2px",
-                        borderRadius: "3px",
+                        background: "rgba(255,255,255,0.9)",
+                        borderRadius: "50%",
+                        width: 28,
+                        height: 28,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                        cursor: "pointer",
+                        fontSize: 15,
+                        color: PINK[400],
+                        "&:hover": { color: PINK[600] },
                       }}
                     >
-                      {product.badge}
+                      ♡
                     </Box>
-                  )}
 
-                  {/* Wishlist */}
-                  <Box
-                    onClick={(e) => e.stopPropagation()}
-                    sx={{
-                      position: "absolute",
-                      top: 16,
-                      right: 10,
-                      zIndex: 2,
-                      background: "rgba(255,255,255,0.9)",
-                      borderRadius: "50%",
-                      width: 28,
-                      height: 28,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                      cursor: "pointer",
-                      fontSize: 15,
-                      color: PINK[400],
-                      "&:hover": { color: PINK[600] },
-                    }}
-                  >
-                    ♡
-                  </Box>
-
-                  {/* ✅ Image FIXED */}
-                  <Box
-                    sx={{
-                      width: "100%",
-                      height: 170,
-                      borderRadius: "6px",
-                      overflow: "hidden",
-                      background: "#fafafa",
-                      mb: 1.2,
-                    }}
-                  >
+                    {/* ✅ Image FIXED */}
                     <Box
-                      component="img"
-                      src={imageSrc}
-                      alt={product?.name || "product"}
-                      onError={(e: any) => {
-                        e.target.src = "https://via.placeholder.com/200"; // fallback if broken
-                      }}
                       sx={{
                         width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
+                        height: 170,
+                        borderRadius: "6px",
+                        overflow: "hidden",
+                        background: "#fafafa",
+                        mb: 1.2,
                       }}
-                    />
-                  </Box>
-
-                  {/* बाकी same */}
-                  <Typography sx={{ fontSize: 9, color: "#888", mb: 0.4 }}>
-                    {product?.is_sponsored ? "Sponsored" : ""}
-                  </Typography>
-
-                  <Typography
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: 13,
-                      color: "#0F1111",
-                      height: 36,
-                      overflow: "hidden",
-                      mb: 0.8,
-                    }}
-                  >
-                    {product?.name}
-                  </Typography>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      mb: 0.8,
-                    }}
-                  >
-                    <Box sx={{ color: PINK[500], fontSize: 12 }}>
-                      {"★".repeat(Math.round(product?.rating || 4))}
-                      {"☆".repeat(5 - Math.round(product?.rating || 4))}
+                    >
+                      <Box
+                        component="img"
+                        src={imageSrc}
+                        alt={product?.name || "product"}
+                        onError={(e: any) => {
+                          e.target.src = "https://via.placeholder.com/200"; // fallback if broken
+                        }}
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
                     </Box>
-                    <Typography sx={{ fontSize: 11 }}>
-                      {product?.rating || "4.2"}
-                    </Typography>
-                    <Typography sx={{ fontSize: 10 }}>
-                      ({product?.review_count || "0"})
-                    </Typography>
-                  </Box>
 
-                  <Box sx={{ display: "flex", gap: 0.8, mb: 0.4 }}>
-                    <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
-                      ₹{product?.price || product?.sale_price}
+                    {/* बाकी same */}
+                    <Typography sx={{ fontSize: 9, color: "#888", mb: 0.4 }}>
+                      {product?.is_sponsored ? "Sponsored" : ""}
                     </Typography>
 
-                    {product?.original_price && (
-                      <Typography
-                        sx={{ fontSize: 11, textDecoration: "line-through" }}
-                      >
-                        ₹{product.original_price}
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: 13,
+                        color: "#0F1111",
+                        height: 36,
+                        overflow: "hidden",
+                        mb: 0.8,
+                      }}
+                    >
+                      {product?.name}
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        mb: 0.8,
+                      }}
+                    >
+                      <Box sx={{ color: PINK[500], fontSize: 12 }}>
+                        {"★".repeat(Math.round(product?.rating || 4))}
+                        {"☆".repeat(5 - Math.round(product?.rating || 4))}
+                      </Box>
+                      <Typography sx={{ fontSize: 11 }}>
+                        {product?.rating || "4.2"}
                       </Typography>
-                    )}
-                  </Box>
+                      <Typography sx={{ fontSize: 10 }}>
+                        ({product?.review_count || "0"})
+                      </Typography>
+                    </Box>
 
-                  <Typography sx={{ fontSize: 10 }}>
-                    FREE Delivery <strong>Tomorrow</strong>
-                  </Typography>
-                </Box>
-              );
-            })}
+                    <Box sx={{ display: "flex", gap: 0.8, mb: 0.4 }}>
+                      <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
+                        ₹{product?.price || product?.sale_price}
+                      </Typography>
+
+                      {product?.original_price && (
+                        <Typography
+                          sx={{ fontSize: 11, textDecoration: "line-through" }}
+                        >
+                          ₹{product.original_price}
+                        </Typography>
+                      )}
+                    </Box>
+
+                    <Typography sx={{ fontSize: 10 }}>
+                      FREE Delivery <strong>Tomorrow</strong>
+                    </Typography>
+                  </Box>
+                );
+              })}
           </Box>
         </Box>
 

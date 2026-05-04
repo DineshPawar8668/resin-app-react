@@ -27,6 +27,7 @@ import { useNavigate } from 'react-router-dom';
 import { categoryService, CategoryItem } from '../services/categoryService';
 import { productService } from '../services/productService';
 import { ProductItem, ProductType } from '../types';
+import { BASE_URL } from '../constant';
 
 const PINK = { 600: '#C2185B', 500: '#E91E8C' };
 
@@ -70,7 +71,7 @@ export const AdminProducts = () => {
 
   useEffect(() => {
     fetchProducts();
-    categoryService.getAll().then(setCategories).catch(() => {});
+    categoryService.getAll().then(setCategories).catch(() => { });
   }, []);
 
   const filtered = useMemo(
@@ -207,7 +208,7 @@ export const AdminProducts = () => {
               }}
             />
 
-            {categories.length > 0 && (
+            {/* {categories.length > 0 && (
               <FormControl size="small" sx={{ flex: '1 1 160px', minWidth: 150 }}>
                 <InputLabel>Category</InputLabel>
                 <Select
@@ -223,7 +224,7 @@ export const AdminProducts = () => {
                   ))}
                 </Select>
               </FormControl>
-            )}
+            )} */}
 
             <FormControl size="small" sx={{ flex: '1 1 160px', minWidth: 150 }}>
               <InputLabel>Product Type</InputLabel>
@@ -371,7 +372,7 @@ export const AdminProducts = () => {
                     <CardMedia
                       component="img"
                       height={180}
-                      image={product.image}
+                      image={`${BASE_URL}${product.images[]}`}
                       alt={product.title}
                       sx={{ objectFit: 'cover' }}
                     />
