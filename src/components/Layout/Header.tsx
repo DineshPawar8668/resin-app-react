@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Avatar, Menu, MenuItem, Divider, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, LogOut, Lock, Tag, Package } from 'lucide-react';
+import { Search, ShoppingCart, User, LogOut, Lock, Tag, Package, PlayCircle, ClipboardList, ShoppingBag } from 'lucide-react';
 import { useAppSelector } from '../../store/hooks';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -102,6 +102,15 @@ export const Header = () => {
 
         {/* Actions */}
         <Box sx={{ display: 'flex', gap: 2, ml: 'auto', alignItems: 'center' }}>
+          {/* Videos */}
+          <Box
+            onClick={() => navigate('/videos')}
+            sx={{ color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 0.5 }}
+          >
+            <PlayCircle size={18} />
+            Videos
+          </Box>
+
           {/* Cart */}
           <Box
             onClick={() => navigate('/cart')}
@@ -184,6 +193,12 @@ export const Header = () => {
                 >
                   <Lock size={15} /> Change Password
                 </MenuItem>
+                <MenuItem
+                  onClick={() => { handleMenuClose(); navigate('/my-orders'); }}
+                  sx={{ gap: 1.5, fontSize: 14 }}
+                >
+                  <ShoppingBag size={15} /> My Orders
+                </MenuItem>
 
                 {user?.is_admin && (
                   <MenuItem
@@ -199,6 +214,14 @@ export const Header = () => {
                     sx={{ gap: 1.5, fontSize: 14, color: PINK[600], fontWeight: 600 }}
                   >
                     <Package size={15} /> Manage Products
+                  </MenuItem>
+                )}
+                {user?.is_admin && (
+                  <MenuItem
+                    onClick={() => { handleMenuClose(); navigate('/admin/orders'); }}
+                    sx={{ gap: 1.5, fontSize: 14, color: PINK[600], fontWeight: 600 }}
+                  >
+                    <ClipboardList size={15} /> Manage Orders
                   </MenuItem>
                 )}
 

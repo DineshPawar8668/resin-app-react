@@ -20,6 +20,12 @@ import { ChangePassword } from "./pages/ChangePassword";
 import { Categories } from "./pages/Categories";
 import { AdminProducts } from "./pages/AdminProducts";
 import { AdminProductForm } from "./pages/AdminProductForm";
+import { AdminOrders } from "./pages/AdminOrders";
+import { AdminOrderDetail } from "./pages/AdminOrderDetail";
+import { Videos } from "./pages/Videos";
+import { VideoPlayer } from "./pages/VideoPlayer";
+import { MyOrders } from "./pages/MyOrders";
+import { MyOrderDetail } from "./pages/MyOrderDetail";
 import { useEffect } from "react";
 import { cartService } from "./services/cartService";
 import { wishlistService } from "./services/wishlistService";
@@ -87,6 +93,8 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<Products />} />
               <Route path="/products/:id" element={<ProductDetail />} />
+              <Route path="/videos" element={<Videos />} />
+              <Route path="/videos/:id" element={<VideoPlayer />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route
@@ -154,6 +162,22 @@ function App() {
                 }
               />
               <Route
+                path="/admin/orders"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <AdminOrders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/orders/:id"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <AdminOrderDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/profile"
                 element={
                   <ProtectedRoute>
@@ -166,6 +190,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ChangePassword />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-orders"
+                element={
+                  <ProtectedRoute>
+                    <MyOrders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-orders/:id"
+                element={
+                  <ProtectedRoute>
+                    <MyOrderDetail />
                   </ProtectedRoute>
                 }
               />

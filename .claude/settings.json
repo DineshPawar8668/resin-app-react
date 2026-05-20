@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\dinesh.pawar\\\\OneDrive - ESDS Software Solution Limited\\\\Desktop\\\\IIBF-P\\\\resin-client\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(del \"c:\\\\Users\\\\dinesh.pawar\\\\OneDrive - ESDS Software Solution Limited\\\\Desktop\\\\IIBF-P\\\\resin-client\\\\src\\\\services\\\\videoService.ts\")",
+      "Bash(Remove-Item \"c:\\\\Users\\\\dinesh.pawar\\\\OneDrive - ESDS Software Solution Limited\\\\Desktop\\\\IIBF-P\\\\resin-client\\\\src\\\\services\\\\videoService.ts\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\dinesh.pawar\\\\OneDrive - ESDS Software Solution Limited\\\\Desktop\\\\IIBF-P\\\\resin-client\\\\public\\\\videos\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\dinesh.pawar\\\\OneDrive - ESDS Software Solution Limited\\\\Desktop\\\\IIBF-P\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(ls -la \"c:\\\\Users\\\\dinesh.pawar\\\\OneDrive - ESDS Software Solution Limited\\\\Desktop\\\\IIBF-P\")",
+      "Read(//c/Users/dinesh.pawar/OneDrive - ESDS Software Solution Limited/Desktop/IIBF-P/**)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\dinesh.pawar\\OneDrive - ESDS Software Solution Limited\\Desktop\\IIBF-P\\resin-server\\src\\models",
+      "c:\\Users\\dinesh.pawar\\OneDrive - ESDS Software Solution Limited\\Desktop\\IIBF-P\\resin-server\\src\\services",
+      "c:\\Users\\dinesh.pawar\\OneDrive - ESDS Software Solution Limited\\Desktop\\IIBF-P\\resin-server\\src\\controllers",
+      "c:\\Users\\dinesh.pawar\\OneDrive - ESDS Software Solution Limited\\Desktop\\IIBF-P\\resin-server\\src\\routes"
+    ]
+  }
+}

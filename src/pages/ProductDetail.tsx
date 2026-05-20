@@ -21,8 +21,9 @@ import { productService } from "../services/productService";
 import { cartService } from "../services/cartService";
 import { wishlistService } from "../services/wishlistService";
 import { reviewService } from "../services/reviewService";
-import { useAppSelector } from "../store/hooks";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { useSnackbar } from "notistack";
+import { setWishlistItems } from "../store/slices/wishlistSlice";
 
 /* 🔥 PINK THEME */
 const PINK = {
@@ -34,6 +35,7 @@ const PINK = {
 export const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { enqueueSnackbar } = useSnackbar();
   const { isAuthenticated, user } = useAppSelector((s) => s.auth);
   const wishlistItems = useAppSelector((s) => s.wishlist.items);
@@ -41,6 +43,7 @@ export const ProductDetail = () => {
   const [product, setProduct] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cartLoading, setCartLoading] = useState(false);
   const [qty, setQty] = useState(1);
   const [imgIndex, setImgIndex] = useState(0);
 
@@ -65,6 +68,63 @@ export const ProductDetail = () => {
   const loadReviews = async () => {
     const data = await reviewService.getProductReviews(id!);
     setReviews(data);
+  };
+
+  const handleAddToCart = async () => {
+    if (!isAuthenticated || !user) {
+      enqueueSnackbar('Please login to add items to cart', { variant: 'warning' });
+      navigate('/login');
+      return;
+    }
+    try {
+      setCartLoading(true);
+      await cartService.addToCart(user.id, id!, qty);
+      enqueueSnackbar('Added to cart!', { variant: 'success' });
+    } catch {
+      enqueueSnackbar('Failed to add to cart', { variant: 'error' });
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!isAuthenticated || !user) {
+      enqueueSnackbar('Please login to continue', { variant: 'warning' });
+      navigate('/login');
+      return;
+    }
+    try {
+      setCartLoading(true);
+      await cartService.addToCart(user.id, id!, qty);
+      navigate('/cart');
+    } catch {
+      enqueueSnackbar('Failed to add to cart', { variant: 'error' });
+      setCartLoading(false);
+    }
+  };
+
+  const handleWishlist = async () => {
+    if (!isAuthenticated || !user) {
+      enqueueSnackbar('Please login to add to wishlist', { variant: 'warning' });
+      navigate('/login');
+      return;
+    }
+    try {
+      if (isWish) {
+        const item = wishlistItems.find((i) => i.product_id === id);
+        if (item) {
+          await wishlistService.removeFromWishlist(item.id);
+          enqueueSnackbar('Removed from wishlist', { variant: 'info' });
+        }
+      } else {
+        await wishlistService.addToWishlist(user.id, id!);
+        enqueueSnackbar('Added to wishlist!', { variant: 'success' });
+      }
+      const updated = await wishlistService.getWishlist(user.id);
+      dispatch(setWishlistItems(updated));
+    } catch {
+      enqueueSnackbar('Failed to update wishlist', { variant: 'error' });
+    }
   };
 
   const isWish = wishlistItems.some((i) => i.product_id === id);
@@ -175,7 +235,9 @@ export const ProductDetail = () => {
             <Button
               fullWidth
               variant="contained"
-              startIcon={<ShoppingCart />}
+              startIcon={cartLoading ? <CircularProgress size={16} color="inherit" /> : <ShoppingCart />}
+              disabled={cartLoading}
+              onClick={handleAddToCart}
               sx={{
                 background: PINK.main,
                 "&:hover": { background: PINK.dark },
@@ -187,6 +249,8 @@ export const ProductDetail = () => {
             <Button
               fullWidth
               variant="outlined"
+              disabled={cartLoading}
+              onClick={handleBuyNow}
               sx={{
                 borderColor: PINK.main,
                 color: PINK.main,
@@ -195,8 +259,11 @@ export const ProductDetail = () => {
               Buy Now
             </Button>
 
-            <IconButton>
-              <Heart color={isWish ? PINK.main : "gray"} />
+            <IconButton onClick={handleWishlist}>
+              <Heart
+                fill={isWish ? PINK.main : "none"}
+                color={isWish ? PINK.main : "gray"}
+              />
             </IconButton>
           </Box>
 

@@ -1,75 +1,65 @@
-import { supabase } from '../lib/supabase';
-import { CartItem } from '../types';
+import { api } from './authService';
+import { CartItem, Product } from '../types';
+import { getImageUrl } from '../lib/imageUrl';
+
+const normalizeProduct = (p: any): Product => ({
+  id: p._id ?? p.id ?? '',
+  name: p.title ?? '',
+  description: p.description ?? '',
+  price: p.price ?? 0,
+  discount_price: p.offerprice,
+  category_id: p.categoryid ?? '',
+  images: p.image ? [getImageUrl(p.image)] : [],
+  stock: p.stock ?? 999,
+  is_featured: p.product_type === 1,
+  rating: 0,
+  created_at: p.createdAt ?? '',
+  updated_at: p.updatedAt ?? '',
+});
+
+const normalizeItem = (item: any): CartItem => {
+  const prod = item.productid && typeof item.productid === 'object' ? item.productid : null;
+  return {
+    id: item._id ?? item.id ?? '',
+    user_id: typeof item.customerid === 'string' ? item.customerid : (item.customerid?._id ?? ''),
+    product_id: prod?._id ?? item.productid ?? '',
+    quantity: item.quantity ?? 1,
+    created_at: item.createdAt ?? '',
+    updated_at: item.updatedAt ?? '',
+    product: prod ? normalizeProduct(prod) : undefined,
+  };
+};
 
 export const cartService = {
-  async getCartItems(userId: string) {
-    const { data, error } = await supabase
-      .from('cart_items')
-      .select('*, product:products(*)')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data as CartItem[];
+  async getCartItems(customerId: string): Promise<CartItem[]> {
+    const { data } = await api.get(`/cart/customer/${customerId}`);
+    const items: any[] = data?.data?.data ?? data?.data ?? [];
+    return items.map(normalizeItem);
   },
 
-  async addToCart(userId: string, productId: string, quantity: number = 1) {
-    const { data: existing } = await supabase
-      .from('cart_items')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('product_id', productId)
-      .maybeSingle();
-
-    if (existing) {
-      const { data, error } = await supabase
-        .from('cart_items')
-        .update({ quantity: existing.quantity + quantity })
-        .eq('id', existing.id)
-        .select('*, product:products(*)')
-        .single();
-
-      if (error) throw error;
-      return data as CartItem;
-    } else {
-      const { data, error } = await supabase
-        .from('cart_items')
-        .insert({ user_id: userId, product_id: productId, quantity })
-        .select('*, product:products(*)')
-        .single();
-
-      if (error) throw error;
-      return data as CartItem;
-    }
+  async addToCart(customerId: string, productId: string, quantity = 1): Promise<CartItem> {
+    const { data } = await api.post('/cart', { customerid: customerId, productid: productId, quantity });
+    return normalizeItem(data?.data ?? data);
   },
 
-  async updateQuantity(itemId: string, quantity: number) {
-    const { data, error } = await supabase
-      .from('cart_items')
-      .update({ quantity })
-      .eq('id', itemId)
-      .select('*, product:products(*)')
-      .single();
-
-    if (error) throw error;
-    return data as CartItem;
+  async updateQuantity(itemId: string, quantity: number): Promise<CartItem> {
+    const { data } = await api.patch(`/cart/${itemId}`, { quantity });
+    return normalizeItem(data?.data ?? data);
   },
 
-  async removeFromCart(itemId: string) {
-    const { error } = await supabase
-      .from('cart_items')
-      .delete()
-      .eq('id', itemId);
-
-    if (error) throw error;
+  async removeFromCart(itemId: string): Promise<void> {
+    await api.delete(`/cart/${itemId}`);
   },
 
-  async clearCart(userId: string) {
-    const { error } = await supabase
-      .from('cart_items')
-      .delete()
-      .eq('user_id', userId);
+  async clearCart(customerId: string): Promise<void> {
+    await api.delete(`/cart/customer/${customerId}/clear`);
+  },
 
-    if (error) throw error;
+  async placeOrder(customerId: string, productIds: string[]): Promise<any> {
+    const { data } = await api.post('/orders', {
+      customerid: customerId,
+      productsids: productIds,
+    });
+    return data?.data ?? data;
   },
 };
