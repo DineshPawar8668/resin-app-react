@@ -767,7 +767,7 @@ export const Home = () => {
             </div>
             <button
               style={styles.viewAll}
-              onClick={() => navigate("/products")}
+              onClick={() => navigate("/products/")}
             >
               VIEW ALL
             </button>
@@ -785,7 +785,7 @@ export const Home = () => {
             {deals.map((d, i) => (
               <Box
                 key={i}
-                onClick={() => navigate("/products")}
+                onClick={() => navigate(`/products/${d?.id}`)}
                 sx={{
                   minWidth: 180,
                   maxWidth: 180,
@@ -1041,7 +1041,7 @@ export const Home = () => {
                         src={imageSrc}
                         alt={product?.name || "product"}
                         onError={(e: any) => {
-                          e.target.src = "https://via.placeholder.com/200"; // fallback if broken
+                          // e.target.src = "https://via.placeholder.com/200"; // fallback if broken
                         }}
                         sx={{
                           width: "100%",

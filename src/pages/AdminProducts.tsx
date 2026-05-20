@@ -372,7 +372,7 @@ export const AdminProducts = () => {
                     <CardMedia
                       component="img"
                       height={180}
-                      image={`${BASE_URL}${product.images[]}`}
+                      image={`${BASE_URL}${""}`}
                       alt={product.title}
                       sx={{ objectFit: 'cover' }}
                     />
