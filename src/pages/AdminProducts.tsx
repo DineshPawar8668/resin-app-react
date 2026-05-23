@@ -29,7 +29,7 @@ import { productService } from '../services/productService';
 import { ProductItem, ProductType } from '../types';
 import { BASE_URL } from '../constant';
 
-const PINK = { 600: '#C2185B', 500: '#E91E8C' };
+const PINK = { 600: '#F06292', 500: '#F48FB1' };
 
 const TYPE_META: Record<number, { label: string; color: string }> = {
   [ProductType.REGULAR]: { label: 'Regular', color: '#1976D2' },
@@ -372,7 +372,7 @@ export const AdminProducts = () => {
                     <CardMedia
                       component="img"
                       height={180}
-                      image={`${BASE_URL}${""}`}
+                      image={`${BASE_URL}${product.image}`}
                       alt={product.title}
                       sx={{ objectFit: 'cover' }}
                     />
@@ -489,7 +489,7 @@ export const AdminProducts = () => {
                       onClick={() => navigate(`/admin/products/${product.id}/edit`)}
                       sx={{
                         color: PINK[500],
-                        '&:hover': { bgcolor: 'rgba(233,30,140,0.08)' },
+                        '&:hover': { bgcolor: 'rgba(240,98,146,0.08)' },
                       }}
                       title="Edit"
                     >

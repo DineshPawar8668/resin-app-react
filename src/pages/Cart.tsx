@@ -11,10 +11,11 @@ import { Trash2, Plus, Minus, ShoppingBag, BookOpen, ArrowRight, ShoppingCart } 
 import { useNavigate } from 'react-router-dom';
 import { CartItem } from '../types';
 import { cartService } from '../services/cartService';
+import { paymentService } from '../services/paymentService';
 import { useAppSelector } from '../store/hooks';
 import { useSnackbar } from 'notistack';
 
-const PINK = { 600: '#C2185B', 500: '#E91E8C', 50: '#FCE4EC', 100: '#F8BBD0' };
+const PINK = { 600: '#F06292', 500: '#F48FB1', 50: '#FFF0F6', 100: '#FCE4EC' };
 
 export const Cart = () => {
   const navigate = useNavigate();
@@ -75,14 +76,41 @@ export const Cart = () => {
     try {
       setBookingLoading(true);
       const productIds = cartItems.map((i) => i.product_id);
-      await cartService.placeOrder(user.id, productIds);
-      await cartService.clearCart(user.id);
-      setCartItems([]);
-      enqueueSnackbar('Order placed successfully!', { variant: 'success' });
-      navigate('/');
+
+      const paymentData = await paymentService.initiatePayment(user.id, productIds);
+
+      setBookingLoading(false);
+
+      paymentService.openCheckout(
+        paymentData,
+        user.name ?? 'Customer',
+        user.email ?? '',
+        async (razorpayResponse) => {
+          try {
+            setBookingLoading(true);
+            await paymentService.verifyPayment(
+              razorpayResponse.razorpay_order_id,
+              razorpayResponse.razorpay_payment_id,
+              razorpayResponse.razorpay_signature,
+              user.id,
+              productIds
+            );
+            await cartService.clearCart(user.id);
+            setCartItems([]);
+            enqueueSnackbar('Order placed successfully! Payment confirmed.', { variant: 'success' });
+            navigate('/my-orders');
+          } catch {
+            enqueueSnackbar('Payment verification failed. Please contact support.', { variant: 'error' });
+          } finally {
+            setBookingLoading(false);
+          }
+        },
+        () => {
+          enqueueSnackbar('Payment cancelled.', { variant: 'info' });
+        }
+      );
     } catch {
-      enqueueSnackbar('Failed to place order. Please try again.', { variant: 'error' });
-    } finally {
+      enqueueSnackbar('Failed to initiate payment. Please try again.', { variant: 'error' });
       setBookingLoading(false);
     }
   };
@@ -196,7 +224,7 @@ export const Cart = () => {
 
             <Box sx={{ p: 2.5 }}>
               {/* Line items */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4 }}>
                 {cartItems.map((item) => {
                   const unitPrice = item.product?.discount_price ?? item.product?.price ?? 0;
                   return (
@@ -278,7 +306,7 @@ export const Cart = () => {
           </Box>
 
           {/* ── RIGHT: Cart Items ── */}
-          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, order: { xs: 1, md: 2 } }}>
+          <Box sx={{ flex: 1, minWidth: 0, width: { xs: '100%', md: 'auto' }, display: 'flex', flexDirection: 'column', gap: 2, order: { xs: 1, md: 2 } }}>
             {cartItems.map((item) => {
               const unitPrice = item.product?.discount_price ?? item.product?.price ?? 0;
               const originalPrice = item.product?.price ?? 0;

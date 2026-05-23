@@ -35,7 +35,7 @@ import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { setWishlistItems } from "../store/slices/wishlistSlice";
 import { getImageUrl } from "../lib/imageUrl";
 
-const PINK = { 600: "#C2185B", 500: "#E91E8C", 50: "#FCE4EC", 100: "#F8BBD0" };
+const PINK = { 600: "#F06292", 500: "#F48FB1", 50: "#FFF0F6", 100: "#FCE4EC" };
 
 const SORT_OPTIONS = [
   { value: "default", label: "Featured" },

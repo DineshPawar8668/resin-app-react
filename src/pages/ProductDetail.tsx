@@ -28,8 +28,8 @@ import { setWishlistItems } from "../store/slices/wishlistSlice";
 /* 🔥 PINK THEME */
 const PINK = {
   main: "#E91E63",
-  light: "#F8BBD0",
-  dark: "#C2185B",
+  light: "#FCE4EC",
+  dark: "#F06292",
 };
 
 export const ProductDetail = () => {

@@ -38,11 +38,11 @@ import { BASE_URL } from "../constant";
 
 /* ─── PINK PALETTE ─────────────────────────────── */
 const PINK = {
-  600: "#C2185B",
-  500: "#E91E8C",
+  600: "#F06292",
+  500: "#FCE4EC",
   400: "#F06292",
-  300: "#F48FB1",
-  100: "#FCE4EC",
+  300: "#FCE4EC",
+  100: "#FFF0F6",
   50: "#FFF0F5",
 };
 
@@ -297,6 +297,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
 };
 
+const VIDEO_FOLDER = '/hero/';
+const buildSrc = (filename: string) => `${VIDEO_FOLDER}${filename}`;
+
 /* ─── BANNER SLIDES ──────────────────────────────── */
 const BANNERS = [
   {
@@ -304,21 +307,21 @@ const BANNERS = [
     label: "Big Pink Sale",
     sub: "Up to 80% off on handcrafted resin art",
     cta: "Shop Now",
-    img: "https://images.pexels.com/photos/1090638/pexels-photo-1090638.jpeg?auto=compress&w=600",
+    img: "r-3.jpg",
   },
   {
     bg: `linear-gradient(120deg, #880E4F 0%, ${PINK[500]} 100%)`,
     label: "New Arrivals",
     sub: "Explore the freshest resin collections",
     cta: "Discover",
-    img: "https://images.pexels.com/photos/1458329/pexels-photo-1458329.jpeg?auto=compress&w=600",
+    img: "r-4.jpg",
   },
   {
     bg: `linear-gradient(120deg, ${PINK[400]} 0%, #FFB3C6 100%)`,
     label: "Gift Sets",
     sub: "Beautiful handmade pieces for every occasion",
     cta: "Gift Now",
-    img: "https://images.pexels.com/photos/5591663/pexels-photo-5591663.jpeg?auto=compress&w=600",
+    img: "r-1.jpg",
   },
 ];
 
@@ -693,7 +696,7 @@ export const Home = () => {
               </Box>
               <Box
                 component="img"
-                src={b.img}
+                src={buildSrc(b.img)}
                 alt={b.label}
                 sx={{
                   width: { xs: 120, sm: 200, md: 280 },
@@ -1199,7 +1202,7 @@ export const Home = () => {
       </Box>
 
       {/* ── TRUST BAR ────────────────────────────── */}
-      <div style={styles.trustBar}>
+      {/* <div style={styles.trustBar}>
         {[
           {
             icon: <Truck size={22} color={PINK[500]} />,
@@ -1232,10 +1235,10 @@ export const Home = () => {
             </div>
           </div>
         ))}
-      </div>
+      </div> */}
 
       {/* ── FOOTER ───────────────────────────────── */}
-      <div style={styles.footer}>
+      {/* <div style={styles.footer}>
         <Box
           sx={{
             maxWidth: 1280,
@@ -1348,7 +1351,7 @@ export const Home = () => {
             © 2025 ResinArt. All rights reserved. Made with ♥ in India.
           </Typography>
         </Box>
-      </div>
+      </div> */}
     </Box>
   );
 };

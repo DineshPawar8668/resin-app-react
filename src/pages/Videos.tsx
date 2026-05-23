@@ -2,7 +2,7 @@ import { Box, Typography, Card, CardContent, CardMedia, CardActionArea, Chip } f
 import { PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const PINK = { 600: '#C2185B', 500: '#E91E8C' };
+const PINK = { 600: '#F06292', 500: '#F48FB1' };
 
 const DUMMY_VIDEOS = [
   {
@@ -58,7 +58,7 @@ const DUMMY_VIDEOS = [
 const categoryColor: Record<string, string> = {
   Beginner: '#4CAF50',
   Intermediate: '#FF9800',
-  Advanced: '#C2185B',
+  Advanced: '#F06292',
 };
 
 export const Videos = () => {

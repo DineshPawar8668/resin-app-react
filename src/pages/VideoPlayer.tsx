@@ -2,7 +2,7 @@ import { Box, Typography, Chip, Button } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, PlayCircle } from 'lucide-react';
 
-const PINK = { 600: '#C2185B', 500: '#E91E8C' };
+const PINK = { 600: '#F06292', 500: '#F48FB1' };
 
 // Drop your .mp4 files inside  public/videos/
 // Then set video_url to just the filename, e.g. "tutorial-basics.mp4"
@@ -62,7 +62,7 @@ const DUMMY_VIDEOS = [
 const categoryColor: Record<string, string> = {
   Beginner: '#4CAF50',
   Intermediate: '#FF9800',
-  Advanced: '#C2185B',
+  Advanced: '#F06292',
 };
 
 const buildSrc = (filename: string) => `${VIDEO_FOLDER}${filename}`;

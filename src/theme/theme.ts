@@ -4,24 +4,24 @@ export const getTheme = (mode: 'light' | 'dark'): ThemeOptions => ({
   palette: {
     mode,
     primary: {
-      main: mode === 'light' ? '#FF9A8B' : '#FF6B9D',
-      light: '#FFB4A8',
-      dark: '#FF7B6E',
+      main: mode === 'light' ? '#F06292' : '#F06292',
+      light: '#F48FB1',
+      dark: '#EC407A',
       contrastText: '#fff',
     },
     secondary: {
-      main: mode === 'light' ? '#A8E6CF' : '#81C784',
-      light: '#C4F1E0',
-      dark: '#7FD4AB',
-      contrastText: '#000',
+      main: mode === 'light' ? '#26C6DA' : '#00BCD4',
+      light: '#4DD0E1',
+      dark: '#0097A7',
+      contrastText: '#fff',
     },
     background: {
-      default: mode === 'light' ? '#FFF5F7' : '#1a1a1a',
+      default: mode === 'light' ? '#FFF9FC' : '#1a1a1a',
       paper: mode === 'light' ? '#FFFFFF' : '#2d2d2d',
     },
     text: {
-      primary: mode === 'light' ? '#2C3E50' : '#E0E0E0',
-      secondary: mode === 'light' ? '#546E7A' : '#B0B0B0',
+      primary: mode === 'light' ? '#333333' : '#E0E0E0',
+      secondary: mode === 'light' ? '#757575' : '#B0B0B0',
     },
   },
   typography: {

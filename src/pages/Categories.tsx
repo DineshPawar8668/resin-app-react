@@ -22,7 +22,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { categoryService, CategoryItem } from '../services/categoryService';
 
-const PINK = { 600: '#C2185B', 500: '#E91E8C' };
+const PINK = { 600: '#F06292', 500: '#F48FB1' };
 
 const validationSchema = Yup.object({
   name: Yup.string().trim().required('Category name is required'),
@@ -389,7 +389,7 @@ export const Categories = () => {
                     <IconButton
                       size="small"
                       onClick={() => openEdit(cat)}
-                      sx={{ color: PINK[500], '&:hover': { bgcolor: 'rgba(233,30,140,0.08)' } }}
+                      sx={{ color: PINK[500], '&:hover': { bgcolor: 'rgba(240,98,146,0.08)' } }}
                       title="Edit"
                     >
                       <Pencil size={16} />
@@ -584,7 +584,7 @@ export const Categories = () => {
                       transition: 'border-color 0.2s, background 0.2s',
                       '&:hover': {
                         borderColor: PINK[500],
-                        bgcolor: 'rgba(233,30,140,0.04)',
+                        bgcolor: 'rgba(240,98,146,0.04)',
                       },
                     }}
                   >
@@ -593,7 +593,7 @@ export const Categories = () => {
                         width: 44,
                         height: 44,
                         borderRadius: '50%',
-                        bgcolor: 'rgba(233,30,140,0.08)',
+                        bgcolor: 'rgba(240,98,146,0.08)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
