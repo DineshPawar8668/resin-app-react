@@ -14,7 +14,7 @@ export const Layout = ({ children }: LayoutProps) => {
       <Box component="main" sx={{ flexGrow: 1 }}>
         {children}
       </Box>
-      {/* <Footer /> */}
+      <Footer />
     </Box>
   );
 };

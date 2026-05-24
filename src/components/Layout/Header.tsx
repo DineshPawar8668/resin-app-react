@@ -39,7 +39,7 @@ export const Header = () => {
     <Box sx={{ position: 'sticky', top: 0, zIndex: 1200 }}>
 
       {/* ── Announcement Bar ── */}
-      {barVisible && (
+      {/* {barVisible && (
         <Box
           sx={{
             background: C.bar,
@@ -62,7 +62,7 @@ export const Header = () => {
             <X size={14} />
           </IconButton>
         </Box>
-      )}
+      )} */}
 
       {/* ── Main Navbar ── */}
       <Box
@@ -105,8 +105,11 @@ export const Header = () => {
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3.5, ml: 4 }}>
             {[
               { label: 'Shop', path: '/products' },
-              { label: 'Best Sellers', path: '/products' },
-              { label: 'About', path: '/' },
+              { label: 'About Us', path: '/about-us' },
+              { label: 'Privacy Policy', path: '/privacy-policy' },
+              { label: 'Terms & Condition', path: '/terms-and-conditions' },
+              { label: 'Refund Policy', path: '/refund-policy' },
+              { label: 'Contact', path: '/contact' },
             ].map((item) => (
               <Typography
                 key={item.label}

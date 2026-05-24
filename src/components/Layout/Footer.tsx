@@ -1,15 +1,18 @@
-import { Box, Container, Typography, Link as MuiLink, Grid } from '@mui/material';
+import { Box, Container, Typography, Link as MuiLink, Grid } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 export const Footer = () => {
+  const navigate = useNavigate();
+
   return (
     <Box
       component="footer"
       sx={{
-        backgroundColor: 'background.paper',
-        borderTop: '1px solid',
-        borderColor: 'divider',
+        backgroundColor: "background.paper",
+        borderTop: "1px solid",
+        borderColor: "divider",
         py: 6,
-        mt: 'auto',
+        mt: "auto",
       }}
     >
       <Container maxWidth="lg">
@@ -26,14 +29,14 @@ export const Footer = () => {
             <Typography variant="h6" gutterBottom fontWeight={600}>
               Quick Links
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <MuiLink href="/products" underline="hover" color="text.secondary">
                 Shop All
               </MuiLink>
               <MuiLink href="/products" underline="hover" color="text.secondary">
                 Categories
               </MuiLink>
-              <MuiLink href="/" underline="hover" color="text.secondary">
+              <MuiLink href="/about-us" underline="hover" color="text.secondary">
                 About Us
               </MuiLink>
             </Box>
@@ -42,20 +45,23 @@ export const Footer = () => {
             <Typography variant="h6" gutterBottom fontWeight={600}>
               Support
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <MuiLink href="/" underline="hover" color="text.secondary">
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <MuiLink onClick={() => navigate("/contact")} underline="hover" color="text.secondary" sx={{ cursor: "pointer" }}>
                 Contact Us
               </MuiLink>
-              <MuiLink href="/" underline="hover" color="text.secondary">
-                Shipping Info
+              <MuiLink onClick={() => navigate("/privacy-policy")} underline="hover" color="text.secondary" sx={{ cursor: "pointer" }}>
+                Privacy Policy
               </MuiLink>
-              <MuiLink href="/" underline="hover" color="text.secondary">
-                Returns
+              <MuiLink onClick={() => navigate("/terms-and-conditions")} underline="hover" color="text.secondary" sx={{ cursor: "pointer" }}>
+                Terms and Conditions
+              </MuiLink>
+              <MuiLink onClick={() => navigate("/refund-policy")} underline="hover" color="text.secondary" sx={{ cursor: "pointer" }}>
+                Refund Policy
               </MuiLink>
             </Box>
           </Grid>
         </Grid>
-        <Box sx={{ mt: 4, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ mt: 4, pt: 4, borderTop: "1px solid", borderColor: "divider" }}>
           <Typography variant="body2" color="text.secondary" align="center">
             © {new Date().getFullYear()} Resin Artistry. All rights reserved.
           </Typography>
