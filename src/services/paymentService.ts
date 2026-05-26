@@ -37,8 +37,8 @@ interface RazorpayInstance {
 }
 
 export const paymentService = {
-  async initiatePayment(customerid: string, productsids: string[]): Promise<InitiatePaymentResponse> {
-    const { data } = await api.post('/payments/initiate', { customerid, productsids });
+  async initiatePayment(customerid: string, products: { product_id: string; quantity: number }[]): Promise<InitiatePaymentResponse> {
+    const { data } = await api.post('/payments/initiate', { customerid, products });
     return data?.data ?? data;
   },
 
@@ -47,14 +47,14 @@ export const paymentService = {
     razorpay_payment_id: string,
     razorpay_signature: string,
     customerid: string,
-    productsids: string[]
+    products: { product_id: string; quantity: number }[]
   ): Promise<any> {
     const { data } = await api.post('/payments/verify', {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
       customerid,
-      productsids,
+      products,
     });
     return data?.data ?? data;
   },

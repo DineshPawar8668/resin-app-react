@@ -1,7 +1,7 @@
-import { api } from './authService';
-import { getImageUrl } from '../lib/imageUrl';
+import { api } from "./authService";
+import { getImageUrl } from "../lib/imageUrl";
 
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
 
 export interface OrderProduct {
   id: string;
@@ -25,46 +25,46 @@ export interface OrderItem {
   notes: string;
   products: OrderProduct[];
   customer: OrderCustomer | null;
+  productsRawInfo: any[];
   createdAt: string;
   updatedAt: string;
 }
 
 const normalizeProduct = (p: any): OrderProduct => ({
-  id: p._id ?? p.id ?? '',
-  title: p.title ?? p.name ?? '',
+  id: p._id ?? p.id ?? "",
+  title: p.title ?? p.name ?? "",
   price: p.price ?? 0,
   offerprice: p.offerprice ?? p.price ?? 0,
-  image: getImageUrl(p.image ?? ''),
+  image: getImageUrl(p.image ?? ""),
 });
 
 const normalizeCustomer = (c: any): OrderCustomer | null => {
-  if (!c || typeof c === 'string') return null;
+  if (!c || typeof c === "string") return null;
   return {
-    id: c._id ?? c.id ?? '',
-    name: c.name ?? '',
-    email: c.email ?? '',
+    id: c._id ?? c.id ?? "",
+    name: c.name ?? "",
+    email: c.email ?? "",
   };
 };
 
 const normalize = (raw: any): OrderItem => ({
-  id: raw._id ?? raw.id ?? '',
-  status: raw.status ?? 'pending',
+  id: raw._id ?? raw.id ?? "",
+  status: raw.status ?? "pending",
   ispayment: raw.ispayment ?? false,
   totalprice: raw.totalprice ?? 0,
-  notes: raw.notes ?? '',
+  notes: raw.notes ?? "",
   products: Array.isArray(raw.productsids)
-    ? raw.productsids.map((p: any) =>
-        typeof p === 'object' ? normalizeProduct(p) : { id: p, title: '', price: 0, offerprice: 0, image: '' }
-      )
+    ? raw.productsids.map((p: any) => (typeof p === "object" ? normalizeProduct(p) : { id: p, title: "", price: 0, offerprice: 0, image: "" }))
     : [],
   customer: normalizeCustomer(raw.customerid),
-  createdAt: raw.createdAt ?? '',
-  updatedAt: raw.updatedAt ?? '',
+  productsRawInfo: raw?.productsRawInfo,
+  createdAt: raw.createdAt ?? "",
+  updatedAt: raw.updatedAt ?? "",
 });
 
 export const orderService = {
   async getAll(page = 1, limit = 20): Promise<{ orders: OrderItem[]; total: number; totalPages: number }> {
-    const { data } = await api.get('/orders', { params: { page, limit } });
+    const { data } = await api.get("/orders", { params: { page, limit } });
     return {
       orders: (data?.data ?? []).map(normalize),
       total: data?.pagination?.total ?? 0,
