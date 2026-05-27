@@ -8,7 +8,7 @@ import { paymentService } from "../services/paymentService";
 import { useAppSelector } from "../store/hooks";
 import { useSnackbar } from "notistack";
 
-const PINK = { 600: "#F06292", 500: "#F48FB1", 50: "#FFF0F6", 100: "#FCE4EC" };
+const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
 
 export const Cart = () => {
   const navigate = useNavigate();

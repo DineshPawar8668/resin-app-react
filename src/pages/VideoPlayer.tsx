@@ -2,7 +2,7 @@ import { Box, Typography, Chip, Button } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, PlayCircle } from 'lucide-react';
 
-const PINK = { 600: '#F06292', 500: '#F48FB1' };
+const PINK = { 600: '#C2185B', 500: '#D81B60' };
 
 // Drop your .mp4 files inside  public/videos/
 // Then set video_url to just the filename, e.g. "tutorial-basics.mp4"

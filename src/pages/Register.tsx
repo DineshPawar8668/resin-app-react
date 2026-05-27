@@ -7,8 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSnackbar } from 'notistack';
 
 const PINK = {
-  600: '#F06292',
-  500: '#FCE4EC',
+  600: '#880E4F',
+  500: '#C2185B',
 };
 
 const validationSchema = yup.object({

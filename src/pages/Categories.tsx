@@ -22,7 +22,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { categoryService, CategoryItem } from '../services/categoryService';
 
-const PINK = { 600: '#F06292', 500: '#F48FB1' };
+const PINK = { 600: '#C2185B', 500: '#D81B60' };
 
 const validationSchema = Yup.object({
   name: Yup.string().trim().required('Category name is required'),

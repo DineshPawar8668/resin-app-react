@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const PINK = { 600: '#F06292', 500: '#F48FB1', 50: '#FFF0F6', 100: '#FCE4EC' };
+const PINK = { 600: '#C2185B', 500: '#D81B60', 50: '#FFF0F6', 100: '#FCE4EC' };
 
 const SectionHeader = ({ icon: Icon, title }: { icon: any; title: string }) => (
   <Box sx={{ px: 3, py: 2, borderBottom: '1px solid #f5f5f5', display: 'flex', alignItems: 'center', gap: 1 }}>

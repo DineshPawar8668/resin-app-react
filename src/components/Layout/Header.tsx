@@ -6,14 +6,14 @@ import { useAppSelector } from "../../store/hooks";
 import { useAuth } from "../../contexts/AuthContext";
 
 const C = {
-  pink: "#F06292",
-  pinkDark: "#EC407A",
+  pink: "#C2185B",
+  pinkDark: "#880E4F",
   pinkLight: "#FCE4EC",
-  teal: "#26C6DA",
-  bar: "#F48FB1",
+  teal: "#0097A7",
+  bar: "#D81B60",
   white: "#FFFFFF",
-  text: "#333333",
-  grey: "#9E9E9E",
+  text: "#111111",
+  grey: "#555555",
 };
 
 export const Header = () => {

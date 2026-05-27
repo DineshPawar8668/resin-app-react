@@ -25,11 +25,10 @@ import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { useSnackbar } from "notistack";
 import { setWishlistItems } from "../store/slices/wishlistSlice";
 
-/* 🔥 PINK THEME */
 const PINK = {
-  main: "#E91E63",
+  main: "#C2185B",
   light: "#FCE4EC",
-  dark: "#F06292",
+  dark: "#880E4F",
 };
 
 export const ProductDetail = () => {
@@ -215,7 +214,7 @@ export const ProductDetail = () => {
           </Box>
 
           {/* DESC */}
-          <Typography sx={{ mt: 2, color: "#555" }}>
+          <Typography sx={{ mt: 2, color: "#333333" }}>
             {product.description}
           </Typography>
 

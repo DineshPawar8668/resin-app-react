@@ -7,7 +7,7 @@ import { authService } from '../services/authService';
 import { useSnackbar } from 'notistack';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
-const PINK = { 600: '#F06292', 500: '#F48FB1' };
+const PINK = { 600: '#C2185B', 500: '#D81B60' };
 
 const validationSchema = yup.object({
   current_password: yup.string().required('Current password is required'),

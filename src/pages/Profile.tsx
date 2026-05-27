@@ -15,7 +15,7 @@ import { useSnackbar } from 'notistack';
 import { UserProfile } from '../types';
 import { Lock, User, Tag } from 'lucide-react';
 
-const PINK = { 600: '#F06292', 500: '#F48FB1' };
+const PINK = { 600: '#C2185B', 500: '#D81B60' };
 
 export const Profile = () => {
   const navigate = useNavigate();

@@ -38,12 +38,12 @@ import { BASE_URL } from "../constant";
 
 /* ─── PINK PALETTE ─────────────────────────────── */
 const PINK = {
-  600: "#F06292",
-  500: "#FCE4EC",
-  400: "#F06292",
-  300: "#FCE4EC",
-  100: "#FFF0F6",
-  50: "#FFF0F5",
+  600: "#C2185B",
+  500: "#D81B60",
+  400: "#E91E63",
+  300: "#F06292",
+  100: "#FCE4EC",
+  50: "#FFF0F6",
 };
 
 const NAV_H = 64;
@@ -171,7 +171,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     fontFamily: '"Poppins", sans-serif',
     fontWeight: 600,
-    color: "#333",
+    color: "#111111",
     textAlign: "center" as const,
   },
   /* hero banner */
@@ -225,7 +225,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: '"Poppins", sans-serif',
     fontWeight: 700,
     fontSize: 18,
-    color: "#212121",
+    color: "#111111",
   },
   viewAll: {
     background: PINK[500],
@@ -259,7 +259,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 13,
     fontFamily: '"Poppins", sans-serif',
     fontWeight: 600,
-    color: "#212121",
+    color: "#111111",
     textAlign: "center" as const,
     lineHeight: 1.3,
   },
@@ -287,7 +287,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: '"Poppins", sans-serif',
     fontSize: 13,
     fontWeight: 600,
-    color: "#444",
+    color: "#111111",
   },
   /* footer */
   footer: {
@@ -1187,7 +1187,7 @@ export const Home = () => {
                     sx={{
                       fontFamily: '"Poppins", sans-serif',
                       fontSize: 13,
-                      color: "#555",
+                      color: "#333333",
                       fontStyle: "italic",
                       lineHeight: 1.6,
                     }}
