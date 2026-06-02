@@ -627,7 +627,7 @@ export const Home = () => {
                 <div style={styles.catIconWrap}>
                   <img src={c.img} alt={c.label} style={styles.catIcon} />
                 </div>
-                <span style={styles.catLabel}>{c.label}</span>
+                <span style={styles.catLabel}>{c.label?.slice(0,10)}{c.label?.length>12?"...":""}</span>
               </div>
             ))}
         </div>
