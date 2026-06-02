@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, CircularProgress, Divider, Button } from "@mui/material";
-import { ArrowLeft, ClipboardList, Package, CheckCircle2, Clock, Truck, XCircle, RefreshCw, CreditCard, Calendar, Hash, MapPin } from "lucide-react";
+import { Box, Typography, CircularProgress, Divider, Button, TextField, Rating } from "@mui/material";
+import { ArrowLeft, ClipboardList, Package, CheckCircle2, Clock, Truck, XCircle, RefreshCw, CreditCard, Calendar, Hash, MapPin, Star, Edit3 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { orderService, OrderItem, OrderStatus } from "../services/orderService";
+import { orderReviewService, OrderReview } from "../services/orderReviewService";
+import { useAppSelector } from "../store/hooks";
 
 const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
 
@@ -49,25 +51,68 @@ export const MyOrderDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const user = useAppSelector((s) => s.auth.user);
 
   const [order, setOrder] = useState<OrderItem | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [review, setReview] = useState<OrderReview | null>(null);
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [editingReview, setEditingReview] = useState(false);
 
   useEffect(() => {
     if (id) loadOrder();
   }, [id]);
 
+  useEffect(() => {
+    if (id && order?.status === "delivered") loadReview();
+  }, [id, order?.status]);
+
   const loadOrder = async () => {
     try {
       setLoading(true);
       const data = await orderService.getById(id!);
-      // console.log("productsRawInfo=>>>",data)
-
       setOrder(data);
     } catch {
       enqueueSnackbar("Failed to load order", { variant: "error" });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadReview = async () => {
+    try {
+      const data = await orderReviewService.getByOrderId(id!);
+      if (data) {
+        setReview(data);
+        setReviewRating(data.ratings);
+        setReviewText(data.description);
+      }
+    } catch {
+      // no review yet — that's fine
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user || !id) return;
+    try {
+      setReviewLoading(true);
+      const saved = await orderReviewService.submit({
+        orderid: id,
+        customerid: user.id,
+        Customername: user.name ?? user.full_name ?? user.email,
+        ratings: reviewRating,
+        description: reviewText,
+      });
+      setReview(saved);
+      setEditingReview(false);
+      enqueueSnackbar("Review saved successfully!", { variant: "success" });
+    } catch {
+      enqueueSnackbar("Failed to save review", { variant: "error" });
+    } finally {
+      setReviewLoading(false);
     }
   };
 
@@ -416,6 +461,103 @@ export const MyOrderDetail = () => {
             </Box>
           </Box>
         </Box>
+
+        {/* Review section — only for delivered orders */}
+        {order.status === "delivered" && (
+          <Box sx={{ background: "#fff", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", mb: 3 }}>
+            <Box sx={{ px: 3, py: 2, borderBottom: "1px solid #f5f5f5", display: "flex", alignItems: "center", gap: 1 }}>
+              <Star size={17} color={PINK[600]} />
+              <Typography fontWeight={800} fontSize={15}>
+                Your Review
+              </Typography>
+              {review && !editingReview && (
+                <Box
+                  onClick={() => setEditingReview(true)}
+                  sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 0.5, cursor: "pointer", color: PINK[600], fontSize: 13, fontWeight: 600 }}
+                >
+                  <Edit3 size={14} />
+                  Edit
+                </Box>
+              )}
+            </Box>
+
+            <Box sx={{ p: { xs: 2, sm: 3 } }}>
+              {review && !editingReview ? (
+                /* Existing review display */
+                <Box>
+                  <Rating value={review.ratings} readOnly precision={1} sx={{ "& .MuiRating-iconFilled": { color: PINK[500] } }} />
+                  <Typography fontSize={14} color="text.secondary" mt={1} sx={{ whiteSpace: "pre-wrap" }}>
+                    {review.description || <em>No description added.</em>}
+                  </Typography>
+                  <Typography fontSize={11} color="text.disabled" mt={1}>
+                    Reviewed on {new Date(review.updatedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}
+                  </Typography>
+                </Box>
+              ) : (
+                /* Review form */
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Box>
+                    <Typography fontSize={13} fontWeight={600} mb={0.5}>
+                      Rate your experience
+                    </Typography>
+                    <Rating
+                      value={reviewRating}
+                      onChange={(_, v) => setReviewRating(v ?? 1)}
+                      size="large"
+                      sx={{ "& .MuiRating-iconFilled": { color: PINK[500] } }}
+                    />
+                  </Box>
+                  <TextField
+                    label="Write your review (optional)"
+                    multiline
+                    rows={3}
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    fullWidth
+                    size="small"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&.Mui-focused fieldset": { borderColor: PINK[500] },
+                      },
+                      "& label.Mui-focused": { color: PINK[600] },
+                    }}
+                  />
+                  <Box sx={{ display: "flex", gap: 1.5 }}>
+                    <Button
+                      variant="contained"
+                      onClick={handleSubmitReview}
+                      disabled={reviewLoading || reviewRating === 0}
+                      sx={{
+                        background: `linear-gradient(135deg, ${PINK[600]}, ${PINK[500]})`,
+                        borderRadius: "30px",
+                        px: 3,
+                        fontWeight: 700,
+                        boxShadow: "none",
+                        "&:hover": { background: PINK[600], boxShadow: "none" },
+                      }}
+                    >
+                      {reviewLoading ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : review ? "Update Review" : "Submit Review"}
+                    </Button>
+                    {editingReview && (
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          setEditingReview(false);
+                          setReviewRating(review?.ratings ?? 5);
+                          setReviewText(review?.description ?? "");
+                        }}
+                        sx={{ borderColor: "#ccc", color: "#666", borderRadius: "30px", px: 2, fontWeight: 700 }}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        )}
 
         <Button
           onClick={() => navigate("/products")}

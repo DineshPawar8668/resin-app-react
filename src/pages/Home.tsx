@@ -35,6 +35,7 @@ import {
   Grid3X3,
 } from "lucide-react";
 import { BASE_URL } from "../constant";
+import { orderReviewService, OrderReview } from "../services/orderReviewService";
 
 /* ─── PINK PALETTE ─────────────────────────────── */
 const PINK = {
@@ -565,17 +566,20 @@ export const Home = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [slide, setSlide] = useState(0);
   const [cartCount] = useState(2);
+  const [reviews, setReviews] = useState<OrderReview[]>([]);
 
   const loadData = async () => {
     try {
-      const [products, cats] = await Promise.all([
+      const [products, cats, fetchedReviews] = await Promise.all([
         productService.getProducts(),
         productService.getCategories(),
+        orderReviewService.getAll(6),
       ]);
       // console.log(products, cats)
       setDeals(products);
       setFeaturedProducts(products.filter((p) => p.is_featured).slice(0, 8));
       setCategories(cats);
+      setReviews(fetchedReviews);
     } catch (error) {
       console.error("Failed to load data:", error);
     }
@@ -1142,72 +1146,67 @@ export const Home = () => {
             </div>
           </div>
           <Grid container spacing={2} sx={{ p: 2 }}>
-            {TESTIMONIALS.map((t, i) => (
-              <Grid item xs={12} md={4} key={i}>
-                <Box
-                  sx={{
-                    border: `1px solid ${PINK[100]}`,
-                    borderRadius: 2,
-                    p: 2.5,
-                    "&:hover": {
-                      borderColor: PINK[300],
-                      boxShadow: `0 4px 16px ${PINK[100]}`,
-                    },
-                    transition: "all 0.2s",
-                  }}
-                >
+            {reviews.length === 0 ? (
+              <Grid item xs={12}>
+                <Typography sx={{ color: "text.secondary", textAlign: "center", py: 3, fontSize: 14 }}>
+                  No reviews yet. Be the first to review!
+                </Typography>
+              </Grid>
+            ) : (
+              reviews.map((r) => (
+                <Grid item xs={12} md={4} key={r._id}>
                   <Box
                     sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1.5,
-                      mb: 1.5,
+                      border: `1px solid ${PINK[100]}`,
+                      borderRadius: 2,
+                      p: 2.5,
+                      "&:hover": {
+                        borderColor: PINK[300],
+                        boxShadow: `0 4px 16px ${PINK[100]}`,
+                      },
+                      transition: "all 0.2s",
                     }}
                   >
-                    <Avatar
-                      src={t.avatar}
-                      sx={{
-                        width: 48,
-                        height: 48,
-                        border: `2px solid ${PINK[300]}`,
-                      }}
-                    />
-                    <Box>
-                      <Typography
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}>
+                      <Avatar
                         sx={{
+                          width: 48,
+                          height: 48,
+                          border: `2px solid ${PINK[300]}`,
+                          background: PINK[500],
                           fontFamily: '"Poppins", sans-serif',
                           fontWeight: 700,
-                          fontSize: 14,
+                          fontSize: 18,
                         }}
                       >
-                        {t.name}
-                      </Typography>
-                      <Box sx={{ display: "flex", gap: 0.3 }}>
-                        {Array.from({ length: t.rating }).map((_, j) => (
-                          <Star
-                            key={j}
-                            size={13}
-                            fill="#FFD700"
-                            color="#FFD700"
-                          />
-                        ))}
+                        {r.Customername?.[0]?.toUpperCase() ?? "?"}
+                      </Avatar>
+                      <Box>
+                        <Typography sx={{ fontFamily: '"Poppins", sans-serif', fontWeight: 700, fontSize: 14 }}>
+                          {r.Customername}
+                        </Typography>
+                        <Box sx={{ display: "flex", gap: 0.3 }}>
+                          {Array.from({ length: r.ratings }).map((_, j) => (
+                            <Star key={j} size={13} fill="#FFD700" color="#FFD700" />
+                          ))}
+                        </Box>
                       </Box>
                     </Box>
+                    <Typography
+                      sx={{
+                        fontFamily: '"Poppins", sans-serif',
+                        fontSize: 13,
+                        color: "#333333",
+                        fontStyle: "italic",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      "{r.description || "Great product!"}"
+                    </Typography>
                   </Box>
-                  <Typography
-                    sx={{
-                      fontFamily: '"Poppins", sans-serif',
-                      fontSize: 13,
-                      color: "#333333",
-                      fontStyle: "italic",
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    "{t.comment}"
-                  </Typography>
-                </Box>
-              </Grid>
-            ))}
+                </Grid>
+              ))
+            )}
           </Grid>
         </Box>
       </Box>
