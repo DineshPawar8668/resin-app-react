@@ -159,13 +159,22 @@ const styles: Record<string, React.CSSProperties> = {
     minWidth: 80,
     transition: "color 0.2s",
   },
-  catIcon: {
-    width: 48,
-    height: 48,
+  catIconWrap: {
+    width: 60,
+    height: 60,
+    minWidth: 60,
+    minHeight: 60,
     borderRadius: "50%",
-    objectFit: "cover" as const,
+    overflow: "hidden",
     marginBottom: 6,
     border: `2px solid ${PINK[300]}`,
+    flexShrink: 0,
+  },
+  catIcon: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover" as const,
+    display: "block",
   },
   catLabel: {
     fontSize: 12,
@@ -611,7 +620,9 @@ export const Home = () => {
                 onMouseEnter={(e) => (e.currentTarget.style.color = PINK[500])}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#333")}
               >
-                <img src={c.img} alt={c.label} style={styles.catIcon} />
+                <div style={styles.catIconWrap}>
+                  <img src={c.img} alt={c.label} style={styles.catIcon} />
+                </div>
                 <span style={styles.catLabel}>{c.label}</span>
               </div>
             ))}

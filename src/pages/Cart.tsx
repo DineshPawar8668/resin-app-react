@@ -4,7 +4,6 @@ import { Trash2, Plus, Minus, ShoppingBag, BookOpen, ArrowRight, ShoppingCart } 
 import { useNavigate } from "react-router-dom";
 import { CartItem } from "../types";
 import { cartService } from "../services/cartService";
-import { paymentService } from "../services/paymentService";
 import { useAppSelector } from "../store/hooks";
 import { useSnackbar } from "notistack";
 
@@ -18,7 +17,6 @@ export const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [bookingLoading, setBookingLoading] = useState(false);
 
   useEffect(() => {
     if (user) loadCart();
@@ -106,52 +104,9 @@ export const Cart = () => {
   //   }
   // };
 
-  const handleBookNow = async () => {
+  const handleBookNow = () => {
     if (!user || cartItems.length === 0) return;
-    try {
-      setBookingLoading(true);
-
-      const products = cartItems.map((i) => ({
-        product_id: i.product_id,
-        quantity: i.quantity,
-      }));
-
-      const paymentData = await paymentService.initiatePayment(user.id, products);
-
-      setBookingLoading(false);
-
-      paymentService.openCheckout(
-        paymentData,
-        user.name ?? "Customer",
-        user.email ?? "",
-        async (razorpayResponse) => {
-          try {
-            setBookingLoading(true);
-            await paymentService.verifyPayment(
-              razorpayResponse.razorpay_order_id,
-              razorpayResponse.razorpay_payment_id,
-              razorpayResponse.razorpay_signature,
-              user.id,
-              products,
-            );
-            await cartService.clearCart(user.id);
-            setCartItems([]);
-            enqueueSnackbar("Order placed successfully! Payment confirmed.", { variant: "success" });
-            navigate("/my-orders");
-          } catch {
-            enqueueSnackbar("Payment verification failed. Please contact support.", { variant: "error" });
-          } finally {
-            setBookingLoading(false);
-          }
-        },
-        () => {
-          enqueueSnackbar("Payment cancelled.", { variant: "info" });
-        },
-      );
-    } catch {
-      enqueueSnackbar("Failed to initiate payment. Please try again.", { variant: "error" });
-      setBookingLoading(false);
-    }
+    navigate("/checkout");
   };
 
   const subtotal = cartItems.reduce((sum, item) => {
@@ -338,9 +293,8 @@ export const Cart = () => {
                 fullWidth
                 variant="contained"
                 size="large"
-                disabled={bookingLoading}
                 onClick={handleBookNow}
-                startIcon={bookingLoading ? <CircularProgress size={16} color="inherit" /> : <BookOpen size={17} />}
+                startIcon={<BookOpen size={17} />}
                 sx={{
                   mb: 1.5,
                   py: 1.5,
@@ -354,7 +308,7 @@ export const Cart = () => {
                   "&:disabled": { background: PINK[100], color: "#fff" },
                 }}
               >
-                {bookingLoading ? "Placing Order…" : "Book Now"}
+                Place Order
               </Button>
 
               <Button

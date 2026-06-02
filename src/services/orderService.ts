@@ -17,6 +17,19 @@ export interface OrderCustomer {
   email: string;
 }
 
+export interface ShippingAddress {
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  landmark?: string;
+  addressType: 'home' | 'work' | 'other';
+}
+
 export interface OrderItem {
   id: string;
   status: OrderStatus;
@@ -26,6 +39,7 @@ export interface OrderItem {
   products: OrderProduct[];
   customer: OrderCustomer | null;
   productsRawInfo: any[];
+  shippingAddress: ShippingAddress | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -47,6 +61,22 @@ const normalizeCustomer = (c: any): OrderCustomer | null => {
   };
 };
 
+const normalizeAddress = (a: any): ShippingAddress | null => {
+  if (!a || !a.fullName) return null;
+  return {
+    fullName: a.fullName ?? "",
+    phone: a.phone ?? "",
+    addressLine1: a.addressLine1 ?? "",
+    addressLine2: a.addressLine2 ?? "",
+    city: a.city ?? "",
+    state: a.state ?? "",
+    pincode: a.pincode ?? "",
+    country: a.country ?? "India",
+    landmark: a.landmark ?? "",
+    addressType: a.addressType ?? "home",
+  };
+};
+
 const normalize = (raw: any): OrderItem => ({
   id: raw._id ?? raw.id ?? "",
   status: raw.status ?? "pending",
@@ -58,6 +88,7 @@ const normalize = (raw: any): OrderItem => ({
     : [],
   customer: normalizeCustomer(raw.customerid),
   productsRawInfo: raw?.productsRawInfo,
+  shippingAddress: normalizeAddress(raw.shippingAddress),
   createdAt: raw.createdAt ?? "",
   updatedAt: raw.updatedAt ?? "",
 });

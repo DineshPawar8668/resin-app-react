@@ -25,7 +25,7 @@ const multipartHeaders = { 'Content-Type': 'multipart/form-data' };
 
 export const categoryService = {
   getAll: async (): Promise<CategoryItem[]> => {
-    const { data } = await api.get('/categories');
+    const { data } = await api.get('/categories', { params: { limit: 1000 } });
     const list: unknown[] = data?.data ?? data ?? [];
     return Array.isArray(list) ? list.map((r) => normalize(r as Record<string, unknown>)) : [];
   },

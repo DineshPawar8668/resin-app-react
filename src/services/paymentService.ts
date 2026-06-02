@@ -47,7 +47,8 @@ export const paymentService = {
     razorpay_payment_id: string,
     razorpay_signature: string,
     customerid: string,
-    products: { product_id: string; quantity: number }[]
+    products: { product_id: string; quantity: number }[],
+    shippingAddress?: Record<string, any>,
   ): Promise<any> {
     const { data } = await api.post('/payments/verify', {
       razorpay_order_id,
@@ -55,6 +56,7 @@ export const paymentService = {
       razorpay_signature,
       customerid,
       products,
+      shippingAddress,
     });
     return data?.data ?? data;
   },

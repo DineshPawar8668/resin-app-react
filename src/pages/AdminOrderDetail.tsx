@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Typography, CircularProgress, Divider, Select, MenuItem, Button } from "@mui/material";
-import { ArrowLeft, ClipboardList, User, Package, CheckCircle2, Clock, Truck, XCircle, RefreshCw, CreditCard, Calendar, Hash } from "lucide-react";
+import { ArrowLeft, ClipboardList, User, Package, CheckCircle2, Clock, Truck, XCircle, RefreshCw, CreditCard, Calendar, Hash, MapPin, Home, Briefcase, MoreHorizontal } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { orderService, OrderItem, OrderStatus } from "../services/orderService";
@@ -336,6 +336,62 @@ export const AdminOrderDetail = () => {
                 ) : (
                   <Typography fontSize={14} color="text.secondary">
                     Customer details not available
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+
+            {/* Shipping Address */}
+            <Box sx={{ background: "#fff", borderRadius: "20px", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+              <Box sx={{ px: 3, py: 2, borderBottom: "1px solid #f5f5f5", display: "flex", alignItems: "center", gap: 1 }}>
+                <MapPin size={17} color={PINK[600]} />
+                <Typography fontWeight={800} fontSize={15}>
+                  Delivery Address
+                </Typography>
+                {order.shippingAddress && (
+                  <Box
+                    sx={{
+                      ml: "auto",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      background: PINK[50],
+                      color: PINK[600],
+                      fontSize: 11,
+                      fontWeight: 700,
+                      px: 1,
+                      py: 0.3,
+                      borderRadius: 1,
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {order.shippingAddress.addressType === "home" && <Home size={11} />}
+                    {order.shippingAddress.addressType === "work" && <Briefcase size={11} />}
+                    {order.shippingAddress.addressType === "other" && <MoreHorizontal size={11} />}
+                    {order.shippingAddress.addressType}
+                  </Box>
+                )}
+              </Box>
+              <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                {order.shippingAddress ? (
+                  <Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                      <Typography fontWeight={700} fontSize={15}>{order.shippingAddress.fullName}</Typography>
+                      <Typography fontSize={13} color="text.secondary">· {order.shippingAddress.phone}</Typography>
+                    </Box>
+                    <Typography fontSize={13} color="text.secondary" lineHeight={1.7}>
+                      {order.shippingAddress.addressLine1}
+                      {order.shippingAddress.addressLine2 ? `, ${order.shippingAddress.addressLine2}` : ""}
+                      {order.shippingAddress.landmark ? `, Near ${order.shippingAddress.landmark}` : ""}
+                    </Typography>
+                    <Typography fontSize={13} color="text.secondary">
+                      {order.shippingAddress.city}, {order.shippingAddress.state} – {order.shippingAddress.pincode}
+                    </Typography>
+                    <Typography fontSize={13} color="text.secondary">{order.shippingAddress.country}</Typography>
+                  </Box>
+                ) : (
+                  <Typography fontSize={14} color="text.secondary">
+                    No address provided for this order
                   </Typography>
                 )}
               </Box>
