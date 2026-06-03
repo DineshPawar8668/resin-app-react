@@ -575,7 +575,6 @@ export const Home = () => {
         productService.getCategories(),
         orderReviewService.getAll(6),
       ]);
-      // console.log(products, cats)
       setDeals(products);
       setFeaturedProducts(products.filter((p) => p.is_featured).slice(0, 8));
       setCategories(cats);
@@ -585,6 +584,8 @@ export const Home = () => {
     }
   };
 
+
+  console.log("deals", deals)
   console.log("products", featuredProducts)
   console.log("cats", categories)
 
@@ -625,9 +626,9 @@ export const Home = () => {
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#333")}
               >
                 <div style={styles.catIconWrap}>
-                  <img src={c.img} alt={c.label} style={styles.catIcon} />
+                  <img src={c.img?c?.img:buildSrc('empty-category.jpg')} alt={c.label} style={styles.catIcon} />
                 </div>
-                <span style={styles.catLabel}>{c.label?.slice(0,10)}{c.label?.length>12?"...":""}</span>
+                <span style={styles.catLabel}>{c.label?.slice(0, 10)}{c.label?.length > 12 ? "..." : ""}</span>
               </div>
             ))}
         </div>
@@ -645,121 +646,8 @@ export const Home = () => {
           gap: 2,
         }}
       >
-        {/* ── HERO BANNER ──────────────────────── */}
-        <Box
-          sx={{
-            borderRadius: 2,
-            overflow: "hidden",
-            position: "relative",
-            height: { xs: 200, sm: 280, md: 340 },
-          }}
-        >
-          {BANNERS.map((b, i) => (
-            <Box
-              key={i}
-              sx={{
-                position: "absolute",
-                inset: 0,
-                background: b.bg,
-                opacity: i === slide ? 1 : 0,
-                transition: "opacity 0.6s ease",
-                display: "flex",
-                alignItems: "center",
-                px: { xs: 3, md: 6 },
-                gap: 4,
-              }}
-            >
-              <Box sx={{ flex: 1 }}>
-                <Typography
-                  sx={{
-                    fontFamily: '"Poppins", sans-serif',
-                    fontWeight: 800,
-                    fontSize: { xs: "1.6rem", md: "2.6rem" },
-                    color: "#fff",
-                    lineHeight: 1.15,
-                    mb: 1,
-                  }}
-                >
-                  {b.label}
-                </Typography>
-                <Typography
-                  sx={{
-                    color: "rgba(255,255,255,0.85)",
-                    fontSize: { xs: 13, md: 16 },
-                    mb: 3,
-                  }}
-                >
-                  {b.sub}
-                </Typography>
-                <button
-                  style={{
-                    background: "#fff",
-                    color: PINK[600],
-                    border: "none",
-                    borderRadius: 3,
-                    padding: "10px 28px",
-                    fontFamily: '"Poppins", sans-serif',
-                    fontWeight: 700,
-                    fontSize: 14,
-                    cursor: "pointer",
-                    boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                  }}
-                  onClick={() => navigate("/products")}
-                >
-                  {b.cta} →
-                </button>
-              </Box>
-              <Box
-                component="img"
-                src={buildSrc(b.img)}
-                alt={b.label}
-                sx={{
-                  width: { xs: 120, sm: 200, md: 280 },
-                  height: { xs: 120, sm: 200, md: 280 },
-                  objectFit: "cover",
-                  borderRadius: 3,
-                  flexShrink: 0,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
-                }}
-              />
-            </Box>
-          ))}
-
-          {/* Arrows */}
-          <button
-            style={{ ...styles.bannerArrow, left: 12 }}
-            onClick={prevSlide}
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            style={{ ...styles.bannerArrow, right: 12 }}
-            onClick={nextSlide}
-          >
-            <ChevronRight size={18} />
-          </button>
-
-          {/* Dots */}
-          <div style={styles.bannerDots}>
-            {BANNERS.map((_, i) => (
-              <Box
-                key={i}
-                onClick={() => setSlide(i)}
-                sx={{
-                  width: i === slide ? 20 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  background: i === slide ? "#fff" : "rgba(255,255,255,0.5)",
-                  cursor: "pointer",
-                  transition: "all 0.3s",
-                }}
-              />
-            ))}
-          </div>
-        </Box>
-
         {/* ── DEALS OF THE DAY ─────────────────── */}
-        <Box
+        {deals?.length > 0 && <Box
           sx={{
             background: "#fff",
             borderRadius: 2,
@@ -908,7 +796,7 @@ export const Home = () => {
                       fontFamily: '"Poppins", sans-serif',
                     }}
                   >
-                    ₹{d.price}
+                    ₹{d.discount_price ? d.discount_price : d?.price}
                   </Typography>
                   <Typography
                     sx={{
@@ -918,7 +806,7 @@ export const Home = () => {
                       fontFamily: '"Poppins", sans-serif',
                     }}
                   >
-                    ₹{d.originalPrice}
+                    {d?.discount_price && d?.price + "₹"}
                   </Typography>
                 </Box>
 
@@ -935,10 +823,10 @@ export const Home = () => {
               </Box>
             ))}
           </Box>
-        </Box>
+        </Box>}
 
         {/* ── FEATURED PRODUCTS ────────────────── */}
-        <Box
+        {featuredProducts.length > 0 && <Box
           sx={{
             background: "#fff",
             borderRadius: 2,
@@ -1128,7 +1016,7 @@ export const Home = () => {
                 );
               })}
           </Box>
-        </Box>
+        </Box>}
 
         {/* ── TESTIMONIALS ─────────────────────── */}
         <Box

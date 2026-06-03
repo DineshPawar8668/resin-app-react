@@ -151,7 +151,7 @@ export const Header = () => {
           <Box sx={{ flex: 1 }} />
 
           {/* Search */}
-          {searchOpen ? (
+          {/* {searchOpen ? (
             <Box
               sx={{
                 display: "flex",
@@ -187,12 +187,12 @@ export const Header = () => {
             <IconButton onClick={() => setSearchOpen(true)} sx={{ color: C.grey, "&:hover": { color: C.pink } }}>
               <Search size={20} />
             </IconButton>
-          )}
+          )} */}
 
           {/* Wishlist */}
-          <IconButton onClick={() => navigate("/wishlist")} sx={{ color: C.grey, "&:hover": { color: C.pink }, display: { xs: "none", sm: "flex" } }}>
+          {/* <IconButton onClick={() => navigate("/wishlist")} sx={{ color: C.grey, "&:hover": { color: C.pink }, display: { xs: "none", sm: "flex" } }}>
             <Heart size={20} />
-          </IconButton>
+          </IconButton> */}
 
           {/* Cart */}
           <IconButton onClick={() => navigate("/cart")} sx={{ color: C.grey, "&:hover": { color: C.pink }, position: "relative" }}>

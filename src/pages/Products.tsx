@@ -539,7 +539,7 @@ const Products = () => {
               transition: "opacity 0.2s, transform 0.2s",
             }}
           >
-            <Tooltip title={inWish ? "Remove from Wishlist" : "Add to Wishlist"} placement="left">
+            {/* <Tooltip title={inWish ? "Remove from Wishlist" : "Add to Wishlist"} placement="left">
               <Box
                 onClick={(e) => handleWishlist(e, product)}
                 sx={{
@@ -562,7 +562,7 @@ const Products = () => {
                   color={inWish ? PINK[500] : "#555"}
                 />
               </Box>
-            </Tooltip>
+            </Tooltip> */}
             <Tooltip title="Add to Cart" placement="left">
               <Box
                 onClick={(e) => handleAddToCart(e, product)}

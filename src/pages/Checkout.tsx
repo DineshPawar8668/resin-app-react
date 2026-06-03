@@ -113,7 +113,7 @@ export const Checkout = () => {
     const price = item.product?.discount_price ?? item.product?.price ?? 0;
     return sum + price * item.quantity;
   }, 0);
-  const shipping = subtotal > 499 ? 0 : 49;
+  const shipping = subtotal > 50 ? 0 : 6;
   const total = subtotal + shipping;
 
   const handlePlaceOrder = async () => {
@@ -353,7 +353,7 @@ export const Checkout = () => {
                 </Box>
                 {shipping === 0 && (
                   <Typography fontSize={12} sx={{ color: "success.main", mb: 2, fontWeight: 600 }}>
-                    🎉 You saved ₹49 on delivery!
+                    🎉 You saved ₹6 on delivery!
                   </Typography>
                 )}
 
@@ -399,7 +399,7 @@ export const Checkout = () => {
             </Box>
             {shipping === 0 && (
               <Typography fontSize={12} color="success.main" fontWeight={600} mt={1.5}>
-                You will save ₹49 on this order
+                You will save ₹6 on this order
               </Typography>
             )}
           </Box>
