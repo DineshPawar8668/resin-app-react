@@ -616,12 +616,12 @@ export const Home = () => {
             gap: 4,
           }}
         >
-          {categories?.length > 0 && categories.map((c) => ({ label: c.name, img: c.image }))
+          {categories?.length > 0 && categories.map((c) => ({ label: c.name, img: c.image, id: c.id }))
             .map((c, i) => (
               <div
                 key={i}
                 style={styles.catItem}
-                onClick={() => navigate(`/products?category=${i + 1}`)}
+                onClick={() => navigate(`/products?category=${c.id}`)}
                 onMouseEnter={(e) => (e.currentTarget.style.color = PINK[500])}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#333")}
               >
@@ -806,7 +806,7 @@ export const Home = () => {
                       fontFamily: '"Poppins", sans-serif',
                     }}
                   >
-                    {d?.discount_price && d?.price + "₹"}
+                    {d?.discount_price &&  "₹"+d?.price }
                   </Typography>
                 </Box>
 

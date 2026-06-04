@@ -63,14 +63,14 @@ const PRODUCT_TYPES = [
 
 const validationSchema = Yup.object({
   title: Yup.string().trim().required('Product title is required'),
-  description: Yup.string(),
+  description: Yup.string().trim().required('Description is required'),
   price: Yup.number()
     .typeError('Enter a valid price')
     .required('Price is required')
     .min(0.01, 'Price must be greater than 0'),
   discountpercent: Yup.number().min(0, 'Min 0').max(100, 'Max 100'),
-  product_type: Yup.number().required(),
-  category_id: Yup.string(),
+  product_type: Yup.number().required('Product type is required'),
+  category_id: Yup.string().required('Category is required'),
   is_active: Yup.boolean(),
 });
 
@@ -101,6 +101,7 @@ export const AdminProductForm = () => {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [imageError, setImageError] = useState('');
   const [pageLoading, setPageLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
 
@@ -116,6 +117,12 @@ export const AdminProductForm = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
+      // Validate image separately (not a formik field)
+      if (!imagePreview && !imageFile) {
+        setImageError('Product image is required');
+        return;
+      }
+      setImageError('');
       setSubmitting(true);
       try {
         const fd = new FormData();
@@ -179,6 +186,7 @@ export const AdminProductForm = () => {
     }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+    setImageError('');
     e.target.value = '';
   };
 
@@ -285,13 +293,16 @@ export const AdminProductForm = () => {
                     sx={fieldSx}
                   />
                   <TextField
-                    label="Description"
+                    label="Description *"
                     name="description"
                     fullWidth
                     multiline
                     rows={4}
                     value={formik.values.description}
                     onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.description && !!formik.errors.description}
+                    helperText={formik.touched.description && formik.errors.description}
                     placeholder="Describe your product in detail…"
                     sx={fieldSx}
                   />
@@ -418,24 +429,33 @@ export const AdminProductForm = () => {
                 />
 
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2.5 }}>
-                  {categories.length > 0 && (
-                    <FormControl sx={{ ...fieldSx, flex: '1 1 180px' }}>
-                      <InputLabel>Category</InputLabel>
-                      <Select
-                        name="category_id"
-                        value={formik.values.category_id}
-                        onChange={formik.handleChange}
-                        label="Category"
-                      >
-                        <MenuItem value="">-- None --</MenuItem>
-                        {categories.map((c) => (
-                          <MenuItem key={c.id} value={c.id}>
-                            {c.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
+                  <FormControl
+                    sx={{ ...fieldSx, flex: '1 1 180px' }}
+                    error={formik.touched.category_id && !!formik.errors.category_id}
+                  >
+                    <InputLabel>Category *</InputLabel>
+                    <Select
+                      name="category_id"
+                      value={formik.values.category_id}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      label="Category *"
+                    >
+                      <MenuItem value="" disabled>
+                        -- Select Category --
+                      </MenuItem>
+                      {categories.map((c) => (
+                        <MenuItem key={c.id} value={c.id}>
+                          {c.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {formik.touched.category_id && formik.errors.category_id && (
+                      <Typography fontSize={11} color="error" mt={0.5} ml={1.75}>
+                        {formik.errors.category_id}
+                      </Typography>
+                    )}
+                  </FormControl>
 
                   <FormControl sx={{ ...fieldSx, flex: '1 1 180px' }}>
                     <InputLabel>Product Type *</InputLabel>
@@ -552,9 +572,16 @@ export const AdminProductForm = () => {
                   top: { md: 24 },
                 }}
               >
-                <Typography fontWeight={700} fontSize={15} mb={2}>
-                  Product Image
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2 }}>
+                  <Typography fontWeight={700} fontSize={15}>
+                    Product Image *
+                  </Typography>
+                </Box>
+                {imageError && (
+                  <Typography fontSize={12} color="error" mb={1.5}>
+                    {imageError}
+                  </Typography>
+                )}
 
                 <input
                   ref={fileInputRef}
@@ -651,7 +678,7 @@ export const AdminProductForm = () => {
                     onClick={() => fileInputRef.current?.click()}
                     sx={{
                       border: '2px dashed',
-                      borderColor: 'divider',
+                      borderColor: imageError ? 'error.main' : 'divider',
                       borderRadius: 2,
                       py: 6,
                       display: 'flex',
@@ -661,8 +688,8 @@ export const AdminProductForm = () => {
                       cursor: 'pointer',
                       transition: 'border-color 0.2s, background 0.2s',
                       '&:hover': {
-                        borderColor: PINK[500],
-                        bgcolor: `${PINK[500]}06`,
+                        borderColor: imageError ? 'error.main' : PINK[500],
+                        bgcolor: imageError ? 'rgba(211,47,47,0.04)' : `${PINK[500]}06`,
                       },
                     }}
                   >

@@ -1,11 +1,10 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Box,
   Typography,
   Slider,
   Drawer,
   useMediaQuery,
-  IconButton,
   Chip,
   Badge,
   Divider,
@@ -13,22 +12,23 @@ import {
   Select,
   CircularProgress,
   Tooltip,
+  Pagination,
 } from "@mui/material";
 import {
   SlidersHorizontal,
   X,
   ShoppingCart,
-  Heart,
   Star,
   Tag,
   ChevronDown,
   Search,
   Sparkles,
 } from "lucide-react";
+
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
-import { productService } from "../services/productService";
+import { productService, ProductPagination } from "../services/productService";
 import { cartService } from "../services/cartService";
 import { wishlistService } from "../services/wishlistService";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
@@ -36,6 +36,7 @@ import { setWishlistItems } from "../store/slices/wishlistSlice";
 import { getImageUrl } from "../lib/imageUrl";
 
 const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
+const MAX_PRICE = 10000;
 
 const SORT_OPTIONS = [
   { value: "default", label: "Featured" },
@@ -45,8 +46,24 @@ const SORT_OPTIONS = [
   { value: "discount", label: "Best Discount" },
 ];
 
+function throttle<T extends (...args: any[]) => void>(fn: T, delay: number): T {
+  let lastCall = 0;
+  return ((...args: any[]) => {
+    const now = Date.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      fn(...args);
+    }
+  }) as T;
+}
+
+const defaultPagination: ProductPagination = {
+  total: 0, page: 1, limit: 10, totalPages: 1, hasNextPage: false, hasPrevPage: false,
+};
+
 const Products = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -54,50 +71,149 @@ const Products = () => {
   const { isAuthenticated, user } = useAppSelector((s) => s.auth);
   const wishlistItems = useAppSelector((s) => s.wishlist.items);
 
+  // ── STATE ──────────────────────────────────────────
   const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [pagination, setPagination] = useState<ProductPagination>(defaultPagination);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [cartLoadingId, setCartLoadingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1); // unified page for desktop+mobile
 
-  // Filters
-  const [selectedCats, setSelectedCats] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<number[]>([0, 5000]);
-  const [maxPrice, setMaxPrice] = useState(5000);
+  // ── FILTERS ────────────────────────────────────────
+  const [selectedCats, setSelectedCats] = useState<string[]>(
+    () => { const c = searchParams.get("category"); return c ? [c] : []; }
+  );
+  // sliderValue updates on every drag (visual only); priceRange updates on commit (triggers API)
+  const [sliderValue, setSliderValue] = useState<number[]>([0, MAX_PRICE]);
+  const [priceRange, setPriceRange] = useState<number[]>([0, MAX_PRICE]);
   const [onlyDiscount, setOnlyDiscount] = useState(false);
   const [sortBy, setSortBy] = useState("default");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
+  // ── REFS ───────────────────────────────────────────
+  const appendModeRef = useRef(false);
+  const searchTimerRef = useRef<any>(null);
+  const isMobileRef = useRef(isMobile);
+  const loadingRef = useRef(loading);
+  const loadingMoreRef = useRef(loadingMore);
+  const paginationRef = useRef(pagination);
+
+  useEffect(() => { isMobileRef.current = isMobile; }, [isMobile]);
+  useEffect(() => { loadingRef.current = loading; }, [loading]);
+  useEffect(() => { loadingMoreRef.current = loadingMore; }, [loadingMore]);
+  useEffect(() => { paginationRef.current = pagination; }, [pagination]);
+
+  // ── LOAD CATEGORIES ────────────────────────────────
   useEffect(() => {
-    loadData();
+    productService.getCategories().then(setCategories).catch(() => {});
   }, []);
 
-  const loadData = async () => {
-    try {
-      const [prod, cat] = await Promise.all([
-        productService.getProducts(),
-        productService.getCategories(),
-      ]);
-      setProducts(prod);
-      setCategories(cat);
-      const top = Math.max(...prod.map((p: any) => p.price || 0), 5000);
-      setMaxPrice(top);
-      setPriceRange([0, top]);
-    } catch {
-      enqueueSnackbar("Failed to load products", { variant: "error" });
-    } finally {
-      setLoading(false);
+  // ── WATCH URL PARAMS (when navigating from Home) ──
+  // Skip the very first render (state already initialised from searchParams above)
+  const isFirstSearchParamRender = useRef(true);
+  useEffect(() => {
+    if (isFirstSearchParamRender.current) {
+      isFirstSearchParamRender.current = false;
+      return;
     }
+    const cat = searchParams.get("category");
+    appendModeRef.current = false;
+    setSelectedCats(cat ? [cat] : []);
+    setPage(1);
+  }, [searchParams]);
+
+  // ── DEBOUNCE SEARCH ────────────────────────────────
+  useEffect(() => {
+    clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      // React 18 batches both into a single render → single fetch
+      setDebouncedSearch(search);
+      setPage(1);
+      appendModeRef.current = false;
+    }, 400);
+    return () => clearTimeout(searchTimerRef.current);
+  }, [search]);
+
+  // ── MAIN FETCH (single effect, all deps, no stale closure) ──
+  useEffect(() => {
+    let cancelled = false;
+    const isAppend = appendModeRef.current;
+    appendModeRef.current = false; // reset after reading
+
+    if (!isAppend) setLoading(true);
+    else setLoadingMore(true);
+
+    const params: Record<string, string | number | boolean> = { page, limit: 10 };
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    if (selectedCats.length > 0) params.category_id = selectedCats.join(",");
+    if (priceRange[0] > 0) params.min_price = priceRange[0];
+    if (priceRange[1] < MAX_PRICE) params.max_price = priceRange[1];
+    if (onlyDiscount) params.only_discount = "1";
+    if (sortBy !== "default") params.sort = sortBy;
+
+    productService
+      .getProductsPaginated(params)
+      .then((result) => {
+        if (!cancelled) {
+          if (isAppend) setProducts((prev) => [...prev, ...result.products]);
+          else setProducts(result.products);
+          setPagination(result.pagination);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) enqueueSnackbar("Failed to load products", { variant: "error" });
+      })
+      .finally(() => {
+        if (!cancelled) { setLoading(false); setLoadingMore(false); }
+      });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, debouncedSearch, selectedCats, priceRange, onlyDiscount, sortBy]);
+
+  // ── DESKTOP PAGE CHANGE ────────────────────────────
+  const handleDesktopPageChange = (_: React.ChangeEvent<unknown>, pg: number) => {
+    appendModeRef.current = false;
+    setPage(pg);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toggleCategory = (id: string) =>
+  // ── MOBILE SCROLL (throttled, uses refs → no stale closure) ──
+  const handleScrollLoadMore = useRef(
+    throttle(() => {
+      if (!isMobileRef.current) return;
+      if (loadingMoreRef.current || loadingRef.current) return;
+      if (!paginationRef.current.hasNextPage) return;
+      if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 400) {
+        appendModeRef.current = true;
+        setPage((p) => p + 1);
+      }
+    }, 500)
+  ).current;
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScrollLoadMore);
+    return () => window.removeEventListener("scroll", handleScrollLoadMore);
+  }, [handleScrollLoadMore]);
+
+  // ── FILTER HELPERS (each resets page + appendMode) ──
+  const toggleCategory = (id: string) => {
+    appendModeRef.current = false;
+    setPage(1);
     setSelectedCats((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
+  };
 
   const clearFilters = () => {
+    appendModeRef.current = false;
+    setPage(1);
     setSelectedCats([]);
-    setPriceRange([0, maxPrice]);
+    setSliderValue([0, MAX_PRICE]);
+    setPriceRange([0, MAX_PRICE]);
     setOnlyDiscount(false);
     setSearch("");
     setSortBy("default");
@@ -106,45 +222,7 @@ const Products = () => {
   const activeFilterCount =
     selectedCats.length +
     (onlyDiscount ? 1 : 0) +
-    (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0);
-
-  const filtered = useMemo(() => {
-    let list = [...products];
-
-    if (search.trim())
-      list = list.filter((p) =>
-        p.name?.toLowerCase().includes(search.toLowerCase())
-      );
-
-    if (selectedCats.length)
-      list = list.filter((p) => selectedCats.includes(p.category_id));
-
-    list = list.filter(
-      (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
-    );
-
-    if (onlyDiscount) list = list.filter((p) => p.discount_price);
-
-    switch (sortBy) {
-      case "price_asc":
-        list.sort((a, b) => a.price - b.price);
-        break;
-      case "price_desc":
-        list.sort((a, b) => b.price - a.price);
-        break;
-      case "name_asc":
-        list.sort((a, b) => a.name?.localeCompare(b.name));
-        break;
-      case "discount":
-        list.sort((a, b) => {
-          const da = a.discount_price ? a.price - a.discount_price : 0;
-          const db = b.discount_price ? b.price - b.discount_price : 0;
-          return db - da;
-        });
-        break;
-    }
-    return list;
-  }, [products, search, selectedCats, priceRange, onlyDiscount, sortBy]);
+    (priceRange[0] > 0 || priceRange[1] < MAX_PRICE ? 1 : 0);
 
   const handleAddToCart = async (e: React.MouseEvent, product: any) => {
     e.stopPropagation();
@@ -252,7 +330,13 @@ const Products = () => {
       <Box sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 3 }}>
         {/* Search */}
         <Box>
-          <Typography fontSize={13} fontWeight={700} color="#333" mb={1.5} sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+          <Typography
+            fontSize={13}
+            fontWeight={700}
+            color="#333"
+            mb={1.5}
+            sx={{ display: "flex", alignItems: "center", gap: 0.8 }}
+          >
             <Search size={14} color={PINK[600]} /> Search
           </Typography>
           <Box
@@ -283,7 +367,12 @@ const Products = () => {
               }}
             />
             {search && (
-              <X size={14} color="#bbb" style={{ cursor: "pointer" }} onClick={() => setSearch("")} />
+              <X
+                size={14}
+                color="#bbb"
+                style={{ cursor: "pointer" }}
+                onClick={() => setSearch("")}
+              />
             )}
           </Box>
         </Box>
@@ -292,7 +381,13 @@ const Products = () => {
 
         {/* Categories */}
         <Box>
-          <Typography fontSize={13} fontWeight={700} color="#333" mb={1.5} sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+          <Typography
+            fontSize={13}
+            fontWeight={700}
+            color="#333"
+            mb={1.5}
+            sx={{ display: "flex", alignItems: "center", gap: 0.8 }}
+          >
             <Tag size={14} color={PINK[600]} /> Categories
           </Typography>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8 }}>
@@ -337,7 +432,12 @@ const Products = () => {
                       <Tag size={13} color={active ? PINK[600] : "#bbb"} />
                     </Box>
                   )}
-                  <Typography fontSize={13} fontWeight={active ? 700 : 500} color={active ? PINK[600] : "#444"} sx={{ flex: 1 }}>
+                  <Typography
+                    fontSize={13}
+                    fontWeight={active ? 700 : 500}
+                    color={active ? PINK[600] : "#444"}
+                    sx={{ flex: 1 }}
+                  >
                     {cat.name}
                   </Typography>
                   {active && (
@@ -361,15 +461,27 @@ const Products = () => {
 
         {/* Price Range */}
         <Box>
-          <Typography fontSize={13} fontWeight={700} color="#333" mb={2} sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+          <Typography
+            fontSize={13}
+            fontWeight={700}
+            color="#333"
+            mb={2}
+            sx={{ display: "flex", alignItems: "center", gap: 0.8 }}
+          >
             <span style={{ color: PINK[600], fontWeight: 800 }}>₹</span> Price Range
           </Typography>
           <Box sx={{ px: 1 }}>
             <Slider
-              value={priceRange}
-              onChange={(_e, val: any) => setPriceRange(val)}
+              value={sliderValue}
+              onChange={(_e, val) => setSliderValue(val as number[])}
+              onChangeCommitted={(_e, val) => {
+                const v = val as number[];
+                setPriceRange(v);
+                setPage(1);
+                appendModeRef.current = false;
+              }}
               min={0}
-              max={maxPrice}
+              max={MAX_PRICE}
               valueLabelDisplay="auto"
               valueLabelFormat={(v) => `₹${v}`}
               sx={{
@@ -386,14 +498,26 @@ const Products = () => {
           </Box>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <Chip
-              label={`₹${priceRange[0]}`}
+              label={`₹${sliderValue[0]}`}
               size="small"
-              sx={{ fontSize: 12, fontWeight: 700, background: PINK[50], color: PINK[600], border: `1px solid ${PINK[100]}` }}
+              sx={{
+                fontSize: 12,
+                fontWeight: 700,
+                background: PINK[50],
+                color: PINK[600],
+                border: `1px solid ${PINK[100]}`,
+              }}
             />
             <Chip
-              label={`₹${priceRange[1]}`}
+              label={`₹${sliderValue[1]}`}
               size="small"
-              sx={{ fontSize: 12, fontWeight: 700, background: PINK[50], color: PINK[600], border: `1px solid ${PINK[100]}` }}
+              sx={{
+                fontSize: 12,
+                fontWeight: 700,
+                background: PINK[50],
+                color: PINK[600],
+                border: `1px solid ${PINK[100]}`,
+              }}
             />
           </Box>
         </Box>
@@ -402,11 +526,17 @@ const Products = () => {
 
         {/* Offers */}
         <Box>
-          <Typography fontSize={13} fontWeight={700} color="#333" mb={1.5} sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+          <Typography
+            fontSize={13}
+            fontWeight={700}
+            color="#333"
+            mb={1.5}
+            sx={{ display: "flex", alignItems: "center", gap: 0.8 }}
+          >
             <Sparkles size={14} color={PINK[600]} /> Offers
           </Typography>
           <Box
-            onClick={() => setOnlyDiscount(!onlyDiscount)}
+            onClick={() => { appendModeRef.current = false; setPage(1); setOnlyDiscount((v) => !v); }}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -436,7 +566,11 @@ const Products = () => {
             >
               {onlyDiscount && <X size={11} color="#fff" strokeWidth={3} />}
             </Box>
-            <Typography fontSize={13} fontWeight={onlyDiscount ? 700 : 500} color={onlyDiscount ? PINK[600] : "#444"}>
+            <Typography
+              fontSize={13}
+              fontWeight={onlyDiscount ? 700 : 500}
+              color={onlyDiscount ? PINK[600] : "#444"}
+            >
               Discounted Items Only
             </Typography>
           </Box>
@@ -450,7 +584,9 @@ const Products = () => {
     const inWish = wishlistItems.some((i) => i.product_id === product.id);
     const discountPct =
       product.discount_price && product.price
-        ? Math.round(((product.price - product.discount_price) / product.price) * 100)
+        ? Math.round(
+            ((product.price - product.discount_price) / product.price) * 100
+          )
         : 0;
     const displayPrice = product.discount_price || product.price;
 
@@ -493,8 +629,6 @@ const Products = () => {
               transition: "transform 0.4s ease",
             }}
           />
-
-          {/* Gradient overlay */}
           <Box
             sx={{
               position: "absolute",
@@ -503,8 +637,6 @@ const Products = () => {
                 "linear-gradient(to top, rgba(0,0,0,0.18) 0%, transparent 60%)",
             }}
           />
-
-          {/* Discount badge */}
           {discountPct > 0 && (
             <Box
               sx={{
@@ -523,8 +655,6 @@ const Products = () => {
               -{discountPct}%
             </Box>
           )}
-
-          {/* Quick action buttons */}
           <Box
             className="quick-actions"
             sx={{
@@ -539,30 +669,6 @@ const Products = () => {
               transition: "opacity 0.2s, transform 0.2s",
             }}
           >
-            {/* <Tooltip title={inWish ? "Remove from Wishlist" : "Add to Wishlist"} placement="left">
-              <Box
-                onClick={(e) => handleWishlist(e, product)}
-                sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  background: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                  cursor: "pointer",
-                  "&:hover": { background: PINK[50] },
-                  transition: "background 0.15s",
-                }}
-              >
-                <Heart
-                  size={16}
-                  fill={inWish ? PINK[500] : "none"}
-                  color={inWish ? PINK[500] : "#555"}
-                />
-              </Box>
-            </Tooltip> */}
             <Tooltip title="Add to Cart" placement="left">
               <Box
                 onClick={(e) => handleAddToCart(e, product)}
@@ -570,7 +676,10 @@ const Products = () => {
                   width: 36,
                   height: 36,
                   borderRadius: "50%",
-                  background: cartLoadingId === product.id ? PINK[100] : `linear-gradient(135deg, ${PINK[600]}, ${PINK[500]})`,
+                  background:
+                    cartLoadingId === product.id
+                      ? PINK[100]
+                      : `linear-gradient(135deg, ${PINK[600]}, ${PINK[500]})`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -590,7 +699,9 @@ const Products = () => {
         </Box>
 
         {/* Info */}
-        <Box sx={{ p: 1.5, flex: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
+        <Box
+          sx={{ p: 1.5, flex: 1, display: "flex", flexDirection: "column", gap: 0.5 }}
+        >
           <Typography
             fontSize={14}
             fontWeight={700}
@@ -605,10 +716,8 @@ const Products = () => {
           >
             {product.name}
           </Typography>
-
-          {/* Rating */}
           {product.rating > 0 && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
@@ -617,10 +726,12 @@ const Products = () => {
                   color={i < Math.round(product.rating) ? "#FFB300" : "#ddd"}
                 />
               ))}
+              <Typography fontSize={11} color="text.secondary" sx={{ lineHeight: 1 }}>
+                {product.rating.toFixed(1)}
+                {product.totalReviews ? ` (${product.totalReviews})` : ""}
+              </Typography>
             </Box>
           )}
-
-          {/* Price */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: "auto", pt: 0.5 }}>
             <Typography fontWeight={800} fontSize={16} sx={{ color: PINK[600] }}>
               ₹{displayPrice?.toFixed ? displayPrice.toFixed(0) : displayPrice}
@@ -673,11 +784,11 @@ const Products = () => {
           }}
         />
       )}
-      {(priceRange[0] > 0 || priceRange[1] < maxPrice) && (
+      {(priceRange[0] > 0 || priceRange[1] < MAX_PRICE) && (
         <Chip
           label={`₹${priceRange[0]} – ₹${priceRange[1]}`}
           size="small"
-          onDelete={() => setPriceRange([0, maxPrice])}
+          onDelete={() => setPriceRange([0, MAX_PRICE])}
           sx={{
             background: PINK[50],
             color: PINK[600],
@@ -704,7 +815,6 @@ const Products = () => {
           overflow: "hidden",
         }}
       >
-        {/* Decorative circles */}
         {[
           { size: 220, top: -80, right: -60, opacity: 0.08 },
           { size: 140, top: 20, right: 120, opacity: 0.06 },
@@ -726,7 +836,6 @@ const Products = () => {
             }}
           />
         ))}
-
         <Box sx={{ maxWidth: 1400, mx: "auto", position: "relative" }}>
           <Typography
             variant="h4"
@@ -734,10 +843,14 @@ const Products = () => {
             color="#fff"
             sx={{ letterSpacing: -0.5, mb: 0.5 }}
           >
-            All Products
+            {selectedCats.length === 1
+              ? categories.find((c) => c.id === selectedCats[0])?.name ?? "Products"
+              : "All Products"}
           </Typography>
           <Typography fontSize={14} sx={{ color: "rgba(255,255,255,0.8)" }}>
-            {loading ? "Loading..." : `${filtered.length} of ${products.length} products`}
+            {loading
+              ? "Loading..."
+              : `${pagination.total} product${pagination.total !== 1 ? "s" : ""} found`}
           </Typography>
         </Box>
       </Box>
@@ -768,7 +881,7 @@ const Products = () => {
 
           {/* ── PRODUCT AREA ── */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            {/* Top bar: active chips + sort + mobile filter btn */}
+            {/* Top bar */}
             <Box
               sx={{
                 background: "#fff",
@@ -800,34 +913,50 @@ const Products = () => {
                     flexShrink: 0,
                   }}
                 >
-                  <Badge badgeContent={activeFilterCount} color="error" sx={{ "& .MuiBadge-badge": { fontSize: 10, minWidth: 16, height: 16 } }}>
-                    <SlidersHorizontal size={15} color={activeFilterCount > 0 ? PINK[600] : "#555"} />
+                  <Badge
+                    badgeContent={activeFilterCount}
+                    color="error"
+                    sx={{ "& .MuiBadge-badge": { fontSize: 10, minWidth: 16, height: 16 } }}
+                  >
+                    <SlidersHorizontal
+                      size={15}
+                      color={activeFilterCount > 0 ? PINK[600] : "#555"}
+                    />
                   </Badge>
-                  <Typography fontSize={13} fontWeight={600} color={activeFilterCount > 0 ? PINK[600] : "#555"}>
+                  <Typography
+                    fontSize={13}
+                    fontWeight={600}
+                    color={activeFilterCount > 0 ? PINK[600] : "#555"}
+                  >
                     Filters
                   </Typography>
                 </Box>
               )}
 
-              {/* Active chips */}
               <Box sx={{ flex: 1 }}>
                 {activeFilterCount > 0 ? (
                   <ActiveChips />
                 ) : (
                   <Typography fontSize={13} color="text.secondary">
-                    {loading ? "Loading..." : `${filtered.length} product${filtered.length !== 1 ? "s" : ""} found`}
+                    {loading
+                      ? "Loading..."
+                      : `${pagination.total} product${pagination.total !== 1 ? "s" : ""} found`}
                   </Typography>
                 )}
               </Box>
 
               {/* Sort */}
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
-                <Typography fontSize={13} color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+                <Typography
+                  fontSize={13}
+                  color="text.secondary"
+                  sx={{ display: { xs: "none", sm: "block" } }}
+                >
                   Sort:
                 </Typography>
                 <Select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(e) => { appendModeRef.current = false; setPage(1); setSortBy(e.target.value); }}
                   size="small"
                   IconComponent={ChevronDown}
                   sx={{
@@ -849,12 +978,19 @@ const Products = () => {
               </Box>
             </Box>
 
-            {/* Grid */}
+            {/* Product Grid */}
             {loading ? (
-              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: 300 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: 300,
+                }}
+              >
                 <CircularProgress sx={{ color: PINK[500] }} />
               </Box>
-            ) : filtered.length === 0 ? (
+            ) : products.length === 0 ? (
               <Box
                 sx={{
                   background: "#fff",
@@ -889,22 +1025,75 @@ const Products = () => {
                 </Box>
               </Box>
             ) : (
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: {
-                    xs: "repeat(2, 1fr)",
-                    sm: "repeat(2, 1fr)",
-                    md: "repeat(3, 1fr)",
-                    lg: "repeat(4, 1fr)",
-                  },
-                  gap: { xs: 1.5, sm: 2 },
-                }}
-              >
-                {filtered.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </Box>
+              <>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "repeat(2, 1fr)",
+                      sm: "repeat(2, 1fr)",
+                      md: "repeat(3, 1fr)",
+                      lg: "repeat(4, 1fr)",
+                    },
+                    gap: { xs: 1.5, sm: 2 },
+                  }}
+                >
+                  {products.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </Box>
+
+                {/* Mobile: loading more spinner */}
+                {isMobile && loadingMore && (
+                  <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                    <CircularProgress size={28} sx={{ color: PINK[500] }} />
+                  </Box>
+                )}
+
+                {/* Mobile: end of list message */}
+                {isMobile && !loadingMore && !pagination.hasNextPage && (
+                  <Typography
+                    textAlign="center"
+                    color="text.secondary"
+                    fontSize={13}
+                    py={3}
+                  >
+                    You've seen all {pagination.total} products
+                  </Typography>
+                )}
+
+                {/* Desktop: Pagination */}
+                {!isMobile && pagination.totalPages > 1 && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      mt: 4,
+                      mb: 2,
+                    }}
+                  >
+                    <Pagination
+                      count={pagination.totalPages}
+                      page={page}
+                      onChange={handleDesktopPageChange}
+                      shape="rounded"
+                      sx={{
+                        "& .MuiPaginationItem-root": {
+                          fontSize: 13,
+                          fontWeight: 600,
+                        },
+                        "& .MuiPaginationItem-root.Mui-selected": {
+                          background: `linear-gradient(135deg, ${PINK[600]}, ${PINK[500]})`,
+                          color: "#fff",
+                          "&:hover": {
+                            background: `linear-gradient(135deg, ${PINK[600]}, ${PINK[500]})`,
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+                )}
+              </>
             )}
           </Box>
         </Box>
@@ -919,7 +1108,9 @@ const Products = () => {
       >
         <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
           <FilterPanel inDrawer />
-          <Box sx={{ p: 2, borderTop: "1px solid #f0f0f0", display: "flex", gap: 1 }}>
+          <Box
+            sx={{ p: 2, borderTop: "1px solid #f0f0f0", display: "flex", gap: 1 }}
+          >
             <Box
               onClick={clearFilters}
               sx={{
@@ -950,7 +1141,7 @@ const Products = () => {
                 cursor: "pointer",
               }}
             >
-              Show {filtered.length} Results
+              Show {pagination.total} Results
             </Box>
           </Box>
         </Box>

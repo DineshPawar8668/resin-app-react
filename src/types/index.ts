@@ -16,6 +16,8 @@ export interface ProductItem {
   category_id?: string;
   is_active: boolean;
   is_deleted?: boolean;
+  avgRating?: number;
+  totalReviews?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -45,6 +47,7 @@ export interface Product {
   stock: number;
   is_featured: boolean;
   rating: number;
+  totalReviews?: number;
   created_at: string;
   updated_at: string;
   category?: Category;

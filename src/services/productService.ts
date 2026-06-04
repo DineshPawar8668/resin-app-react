@@ -14,6 +14,8 @@ const normalize = (raw: Record<string, any>): ProductItem => ({
   category_id: raw.category_id ?? raw.category?._id ?? raw.category?.id ?? '',
   is_active: raw.is_active ?? true,
   is_deleted: raw.is_deleted ?? false,
+  avgRating: Number(raw.avgRating) || 0,
+  totalReviews: Number(raw.totalReviews) || 0,
   createdAt: raw.createdAt ?? raw.created_at ?? '',
   updatedAt: raw.updatedAt ?? raw.updated_at ?? '',
 });
@@ -28,7 +30,8 @@ const toLegacyProduct = (item: ProductItem): Product => ({
   images: item.image ? [item.image] : [],
   stock: 0,
   is_featured: item.product_type === ProductType.FEATURED,
-  rating: 0,
+  rating: item.avgRating ?? 0,
+  totalReviews: item.totalReviews ?? 0,
   created_at: item.createdAt ?? '',
   updated_at: item.updatedAt ?? '',
 });
@@ -37,10 +40,49 @@ const multipart = { 'Content-Type': 'multipart/form-data' };
 const list = (data: any): any[] => data?.data ?? data?.products ?? (Array.isArray(data) ? data : []);
 const single = (data: any): any => data?.data ?? data?.product ?? data;
 
+export interface ProductPagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface ProductsPage {
+  products: Product[];
+  pagination: ProductPagination;
+}
+
 export const productService = {
   async getAll(params?: Record<string, any>): Promise<ProductItem[]> {
     const { data } = await api.get('/products', { params });
     return list(data).map(normalize);
+  },
+
+  async getProductsPaginated(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category_id?: string | string[];
+    min_price?: number;
+    max_price?: number;
+    only_discount?: boolean;
+    sort?: string;
+  }): Promise<ProductsPage> {
+    // Send array of category ids as comma-separated string
+    const queryParams: Record<string, any> = { ...params };
+    if (Array.isArray(params.category_id)) {
+      queryParams.category_id = params.category_id.join(',');
+    }
+    const { data } = await api.get('/products', { params: queryParams });
+    const items: any[] = data?.data ?? [];
+    return {
+      products: items.map(normalize).map(toLegacyProduct),
+      pagination: data?.pagination ?? {
+        total: 0, page: 1, limit: 10, totalPages: 1, hasNextPage: false, hasPrevPage: false,
+      },
+    };
   },
 
   async getById(id: string): Promise<ProductItem> {
