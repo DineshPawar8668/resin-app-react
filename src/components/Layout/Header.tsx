@@ -102,7 +102,7 @@ export const Header = () => {
                 lineHeight: 1,
               }}
             >
-              Resin Creations
+              Shopi Nova
             </Typography>
             <Typography sx={{ fontSize: 9, color: C.teal, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase" }}>
               (+917620342754)

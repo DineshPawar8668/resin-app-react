@@ -181,7 +181,7 @@ export const Checkout = () => {
       {/* Header */}
       <Box sx={{ background: "#fff", borderBottom: "1px solid #e0e0e0", px: { xs: 2, md: 4 }, py: 1.5, display: "flex", alignItems: "center", gap: 1 }}>
         <Typography fontWeight={800} fontSize={20} sx={{ color: PINK[600], cursor: "pointer" }} onClick={() => navigate("/")}>
-          Resin Creations
+          Shopi Nova
         </Typography>
         <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 1 }}>
           <StepChip active={step === "address"} done={step === "review"} num={1} label="ADDRESS" />
