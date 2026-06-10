@@ -605,35 +605,6 @@ export const Home = () => {
         fontFamily: '"Poppins", sans-serif',
       }}
     >
-      {/* ── CATEGORY STRIP ───────────────────────── */}
-      <div style={styles.catStrip}>
-        <div
-          style={{
-            maxWidth: 1280,
-            margin: "0 auto",
-            padding: "0 16px",
-            display: "flex",
-            gap: 4,
-          }}
-        >
-          {categories?.length > 0 && categories.map((c) => ({ label: c.name, img: c.image, id: c.id }))
-            .map((c, i) => (
-              <div
-                key={i}
-                style={styles.catItem}
-                onClick={() => navigate(`/products?category=${c.id}`)}
-                onMouseEnter={(e) => (e.currentTarget.style.color = PINK[500])}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#333")}
-              >
-                <div style={styles.catIconWrap}>
-                  <img src={c.img?c?.img:buildSrc('empty-category.jpg')} alt={c.label} style={styles.catIcon} />
-                </div>
-                <span style={styles.catLabel}>{c.label?.slice(0, 10)}{c.label?.length > 12 ? "..." : ""}</span>
-              </div>
-            ))}
-        </div>
-      </div>
-
       {/* ── MAIN CONTENT ─────────────────────────── */}
       <Box
         sx={{

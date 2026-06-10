@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Avatar, Menu, MenuItem, Divider, Typography, InputBase, IconButton } from "@mui/material";
+import { productService } from "../../services/productService";
 import { useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, User, LogOut, Lock, Tag, Package, ClipboardList, ShoppingBag, Heart, X } from "lucide-react";
 import { useAppSelector } from "../../store/hooks";
@@ -26,7 +27,12 @@ export const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchVal, setSearchVal] = useState("");
   const [barVisible, setBarVisible] = useState(true);
+  const [categories, setCategories] = useState<any[]>([]);
   const menuOpen = Boolean(anchorEl);
+
+  useEffect(() => {
+    productService.getCategories().then(setCategories).catch(() => {});
+  }, []);
 
   const handleMenuClose = () => setAnchorEl(null);
   const handleLogout = () => {
@@ -105,7 +111,7 @@ export const Header = () => {
               Shopi Nova
             </Typography>
             <Typography sx={{ fontSize: 9, color: C.teal, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase" }}>
-              (+917620342754)
+              Plus
             </Typography>
           </Box>
 
@@ -332,6 +338,82 @@ export const Header = () => {
           )}
         </Box>
       </Box>
+
+      {/* ── Category Strip ── */}
+      {categories.length > 0 && (
+        <Box
+          sx={{
+            background: "#fff",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+            overflowX: "auto",
+            whiteSpace: "nowrap",
+            py: "6px",
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
+          }}
+        >
+          <Box
+            sx={{
+              maxWidth: 1280,
+              mx: "auto",
+              px: 2,
+              display: "flex",
+              gap: "4px",
+            }}
+          >
+            {categories.map((cat) => (
+              <Box
+                key={cat.id}
+                onClick={() => navigate(`/products?category=${cat.id}`)}
+                sx={{
+                  display: "inline-flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  px: "12px",
+                  py: "4px",
+                  cursor: "pointer",
+                  minWidth: 56,
+                  flexShrink: 0,
+                  color: "#333",
+                  transition: "color 0.2s",
+                  "&:hover": { color: C.pink },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: "50%",
+                    overflow: "hidden",
+                    mb: "4px",
+                    border: `2px solid #F06292`,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={cat.image || "/hero/empty-category.jpg"}
+                    alt={cat.name}
+                    sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: 10,
+                    fontFamily: '"Poppins", sans-serif',
+                    fontWeight: 600,
+                    color: "inherit",
+                    textAlign: "center",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {cat.name?.slice(0, 10)}{cat.name?.length > 12 ? "..." : ""}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };
