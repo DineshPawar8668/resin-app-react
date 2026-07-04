@@ -1,7 +1,14 @@
 import { api } from "./authService";
 import { getImageUrl } from "../lib/imageUrl";
+import { CartInstanceDetail } from "../types";
 
 export type OrderStatus = "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
+
+export interface OrderProductRawInfo {
+  product?: string;
+  quantity: string;
+  instanceDetails: CartInstanceDetail[];
+}
 
 export interface OrderProduct {
   id: string;
@@ -38,7 +45,7 @@ export interface OrderItem {
   notes: string;
   products: OrderProduct[];
   customer: OrderCustomer | null;
-  productsRawInfo: any[];
+  productsRawInfo: OrderProductRawInfo[];
   shippingAddress: ShippingAddress | null;
   createdAt: string;
   updatedAt: string;
@@ -60,6 +67,18 @@ const normalizeCustomer = (c: any): OrderCustomer | null => {
     email: c.email ?? "",
   };
 };
+
+const normalizeRawInfo = (raw: any): OrderProductRawInfo => ({
+  product: typeof raw.product === "string" ? raw.product : raw.product?._id,
+  quantity: String(raw.quantity ?? ""),
+  instanceDetails: Array.isArray(raw.instanceDetails)
+    ? raw.instanceDetails.map((d: any) => ({
+        date: d.date ?? "",
+        description: d.description ?? "",
+        images: Array.isArray(d.images) ? d.images.map((img: string) => getImageUrl(img)) : [],
+      }))
+    : [],
+});
 
 const normalizeAddress = (a: any): ShippingAddress | null => {
   if (!a || !a.fullName) return null;
@@ -87,7 +106,7 @@ const normalize = (raw: any): OrderItem => ({
     ? raw.productsids.map((p: any) => (typeof p === "object" ? normalizeProduct(p) : { id: p, title: "", price: 0, offerprice: 0, image: "" }))
     : [],
   customer: normalizeCustomer(raw.customerid),
-  productsRawInfo: raw?.productsRawInfo,
+  productsRawInfo: Array.isArray(raw?.productsRawInfo) ? raw.productsRawInfo.map(normalizeRawInfo) : [],
   shippingAddress: normalizeAddress(raw.shippingAddress),
   createdAt: raw.createdAt ?? "",
   updatedAt: raw.updatedAt ?? "",

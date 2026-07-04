@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, IconButton, Button, Divider, CircularProgress } from "@mui/material";
+import { Box, Typography, IconButton, Button, Divider, CircularProgress, Dialog, DialogTitle, DialogContent, List, ListItemButton } from "@mui/material";
 import { Trash2, Plus, Minus, ShoppingBag, BookOpen, ArrowRight, ShoppingCart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CartItem } from "../types";
-import { cartService } from "../services/cartService";
+import { cartService, AddToCartDetails } from "../services/cartService";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
-import { setCartItems as setCartItemsAction, updateCartItemQuantity, removeFromCart as removeFromCartAction } from "../store/slices/cartSlice";
+import { setCartItems as setCartItemsAction, addToCart as addToCartAction, removeCartInstance, removeFromCart as removeFromCartAction } from "../store/slices/cartSlice";
 import { useSnackbar } from "notistack";
+import { AddToCartDetailsModal } from "../components/AddToCartDetailsModal";
 
 const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
 
@@ -19,6 +20,8 @@ export const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [addModalItem, setAddModalItem] = useState<CartItem | null>(null);
+  const [pickerItem, setPickerItem] = useState<CartItem | null>(null);
 
   useEffect(() => {
     if (user) loadCart();
@@ -37,15 +40,47 @@ export const Cart = () => {
     }
   };
 
-  const updateQuantity = async (itemId: string, newQty: number) => {
-    if (newQty < 1) return;
+  const handleIncrement = (item: CartItem) => setAddModalItem(item);
+
+  const handleAddInstanceSubmit = async (values: AddToCartDetails) => {
+    if (!user || !addModalItem) return;
     try {
-      setActionLoading(itemId);
-      await cartService.updateQuantity(itemId, newQty);
-      setCartItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, quantity: newQty } : i)));
-      dispatch(updateCartItemQuantity({ id: itemId, quantity: newQty }));
+      setActionLoading(addModalItem.id);
+      const updated = await cartService.addToCart(user.id, addModalItem.product_id, values);
+      setCartItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+      dispatch(addToCartAction(updated));
+      setAddModalItem(null);
     } catch {
       enqueueSnackbar("Failed to update quantity", { variant: "error" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDecrement = (item: CartItem) => {
+    if (item.quantity <= 1) {
+      removeItem(item.id);
+      return;
+    }
+    setPickerItem(item);
+  };
+
+  const handleRemoveInstance = async (item: CartItem, index: number) => {
+    try {
+      setActionLoading(item.id);
+      await cartService.removeInstance(item.id, index);
+      dispatch(removeCartInstance({ id: item.id, index }));
+      setCartItems((prev) => {
+        if (item.instanceDetails.length <= 1) return prev.filter((i) => i.id !== item.id);
+        return prev.map((i) => {
+          if (i.id !== item.id) return i;
+          const nextDetails = i.instanceDetails.filter((_, idx) => idx !== index);
+          return { ...i, instanceDetails: nextDetails, quantity: nextDetails.length };
+        });
+      });
+      setPickerItem(null);
+    } catch {
+      enqueueSnackbar("Failed to remove item", { variant: "error" });
     } finally {
       setActionLoading(null);
     }
@@ -175,6 +210,7 @@ export const Cart = () => {
 
   /* ── MAIN LAYOUT ── */
   return (
+    <>
     <Box sx={{ background: "#f7f7fa", minHeight: "100vh" }}>
       {/* Header banner */}
       <Box
@@ -511,7 +547,7 @@ export const Cart = () => {
                           <IconButton
                             size="small"
                             disabled={isUpdating || item.quantity <= 1}
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => handleDecrement(item)}
                             sx={{
                               width: 32,
                               height: 32,
@@ -539,7 +575,7 @@ export const Cart = () => {
                           <IconButton
                             size="small"
                             disabled={isUpdating}
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => handleIncrement(item)}
                             sx={{
                               width: 32,
                               height: 32,
@@ -571,5 +607,49 @@ export const Cart = () => {
         </Box>
       </Box>
     </Box>
+
+    <AddToCartDetailsModal
+      open={!!addModalItem}
+      productImage={addModalItem?.product?.images?.[0] ?? ""}
+      productName={addModalItem?.product?.name ?? "Product"}
+      submitting={!!addModalItem && actionLoading === addModalItem.id}
+      title="Add one more — who is this for?"
+      onClose={() => setAddModalItem(null)}
+      onSubmit={handleAddInstanceSubmit}
+    />
+
+    <Dialog open={!!pickerItem} onClose={() => setPickerItem(null)} maxWidth="xs" fullWidth>
+      <DialogTitle sx={{ fontWeight: 700, fontSize: 16 }}>
+        Which one do you want to remove?
+      </DialogTitle>
+      <DialogContent sx={{ pb: 2 }}>
+        <List sx={{ py: 0 }}>
+          {pickerItem?.instanceDetails.map((detail, index) => (
+            <ListItemButton
+              key={index}
+              onClick={() => pickerItem && handleRemoveInstance(pickerItem, index)}
+              disabled={actionLoading === pickerItem?.id}
+              sx={{ display: "flex", gap: 1.5, alignItems: "center", borderRadius: 2, mb: 1, border: "1px solid #f0f0f0" }}
+            >
+              <Box
+                component="img"
+                src={detail.images?.[0] || "https://placehold.co/48x48/f5f5f5/bbb?text=img"}
+                alt=""
+                sx={{ width: 48, height: 48, borderRadius: 1.5, objectFit: "cover", flexShrink: 0, background: "#f5f5f5" }}
+              />
+              <Box sx={{ minWidth: 0 }}>
+                <Typography fontSize={13} fontWeight={700}>
+                  {detail.date ? new Date(detail.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                </Typography>
+                <Typography fontSize={12} color="text.secondary" noWrap>
+                  {detail.description || "No description"}
+                </Typography>
+              </Box>
+            </ListItemButton>
+          ))}
+        </List>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };

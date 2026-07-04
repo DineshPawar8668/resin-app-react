@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, CircularProgress, Divider, Select, MenuItem, Button } from "@mui/material";
-import { ArrowLeft, ClipboardList, User, Package, CheckCircle2, Clock, Truck, XCircle, RefreshCw, CreditCard, Calendar, Hash, MapPin, Home, Briefcase, MoreHorizontal } from "lucide-react";
+import { Box, Typography, CircularProgress, Divider, Select, MenuItem, Button, Dialog, DialogTitle, DialogContent } from "@mui/material";
+import { ArrowLeft, ClipboardList, User, Package, CheckCircle2, Clock, Truck, XCircle, RefreshCw, CreditCard, Calendar, Hash, MapPin, Home, Briefcase, MoreHorizontal, Users, ZoomIn, Download } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
-import { orderService, OrderItem, OrderStatus } from "../services/orderService";
-import { getImageUrl } from "../lib/imageUrl";
+import { orderService, OrderItem, OrderProductRawInfo, OrderStatus } from "../services/orderService";
 
 const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
 
@@ -18,6 +17,40 @@ const STATUS_META: Record<OrderStatus, { label: string; color: string; bg: strin
 };
 
 const ALL_STATUSES: OrderStatus[] = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"];
+
+const getFilenameFromUrl = (url: string) => {
+  try {
+    return new URL(url).pathname.split("/").pop() || "image.jpg";
+  } catch {
+    return "image.jpg";
+  }
+};
+
+const downloadImage = async (url: string) => {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = getFilenameFromUrl(url);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    window.open(url, "_blank");
+  }
+};
+
+const parseInstanceDescription = (description: string) => {
+  const nameMatch = description.match(/Name:\s*([\s\S]*?)(?:\n *Message:|$)/i);
+  const messageMatch = description.match(/Message:\s*([\s\S]*)$/i);
+  return {
+    name: nameMatch?.[1]?.trim() || "—",
+    message: messageMatch?.[1]?.trim() || (nameMatch ? "—" : description.trim() || "—"),
+  };
+};
 
 const InfoRow = ({ icon: Icon, label, value, valueColor }: { icon: any; label: string; value: string; valueColor?: string }) => (
   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 1 }}>
@@ -55,6 +88,8 @@ export const AdminOrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus>("pending");
+  const [detailsFor, setDetailsFor] = useState<{ title: string; info: OrderProductRawInfo } | null>(null);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) loadOrder();
@@ -112,6 +147,7 @@ export const AdminOrderDetail = () => {
   const StatusIcon = statusMeta.icon;
 
   return (
+    <>
     <Box sx={{ background: "#f7f7fa", minHeight: "100vh" }}>
       {/* Top bar */}
       <Box
@@ -256,10 +292,25 @@ export const AdminOrderDetail = () => {
                       <Typography fontWeight={900} fontSize={15} sx={{ color: PINK[600], flexShrink: 0 }}>
                         ₹{product.offerprice || product.price}
                       </Typography>
-                      <Typography fontWeight={900} fontSize={15} sx={{ color: PINK[600], flexShrink: 0 }}></Typography>
-                      <Typography fontSize={14} fontWeight={600} color="text.secondary">
-                        Qty: {order?.productsRawInfo?.[i]?.quantity}{" "}
-                      </Typography>
+                      <Box sx={{ textAlign: "right", flexShrink: 0 }}>
+                        <Typography fontSize={14} fontWeight={600} color="text.secondary">
+                          Qty: {order?.productsRawInfo?.[i]?.quantity}
+                        </Typography>
+                        {!!order?.productsRawInfo?.[i]?.instanceDetails?.length && (
+                          <Box
+                            onClick={() => setDetailsFor({ title: product.title || "Product", info: order.productsRawInfo[i] })}
+                            sx={{
+                              display: "inline-flex", alignItems: "center", gap: 0.5, mt: 0.5,
+                              cursor: "pointer", color: PINK[600], fontSize: 12, fontWeight: 700,
+                              background: PINK[50], px: 1, py: 0.3, borderRadius: "20px",
+                              "&:hover": { background: PINK[100] },
+                            }}
+                          >
+                            <Users size={12} />
+                            View Details ({order.productsRawInfo[i].instanceDetails.length})
+                          </Box>
+                        )}
+                      </Box>
                     </Box>
                   ))
                 )}
@@ -512,5 +563,89 @@ export const AdminOrderDetail = () => {
         </Box>
       </Box>
     </Box>
+
+    <Dialog open={!!detailsFor} onClose={() => setDetailsFor(null)} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ fontWeight: 800, fontSize: 16 }}>
+        Customer Details — {detailsFor?.title}
+      </DialogTitle>
+      <DialogContent sx={{ pb: 3 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {detailsFor?.info.instanceDetails.map((detail, i) => (
+            <Box key={i} sx={{ p: 2, borderRadius: 2, border: "1px solid #f0f0f0", background: "#fafafa" }}>
+              <Typography fontSize={12} fontWeight={700} color={PINK[600]} mb={0.5}>
+                Item {i + 1}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <Calendar size={13} color="#888" />
+                <Typography fontSize={13} fontWeight={600}>
+                  {detail.date ? new Date(detail.date).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }) : "—"}
+                </Typography>
+              </Box>
+              {(() => {
+                const { name, message } = parseInstanceDescription(detail.description || "");
+                return (
+                  <Box sx={{ mb: 1.2 }}>
+                    <Typography fontSize={13} color="text.secondary">
+                      <Typography component="span" fontWeight={700} color="text.primary">Name: </Typography>
+                      {name}
+                    </Typography>
+                    <Typography fontSize={13} color="text.secondary">
+                      <Typography component="span" fontWeight={700} color="text.primary">Description: </Typography>
+                      {message}
+                    </Typography>
+                  </Box>
+                );
+              })()}
+              {!!detail.images.length && (
+                <Box sx={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 0.8 }}>
+                  {detail.images.map((img, imgIdx) => (
+                    <Box
+                      key={imgIdx}
+                      onClick={() => setZoomedImage(img)}
+                      sx={{
+                        position: "relative", aspectRatio: "1", borderRadius: 1, overflow: "hidden",
+                        cursor: "pointer", border: "1px solid #eee",
+                        "&:hover .zoom-icon": { opacity: 1 },
+                      }}
+                    >
+                      <Box component="img" src={img} alt="" sx={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <Box
+                        className="zoom-icon"
+                        sx={{
+                          position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                          background: "rgba(0,0,0,0.35)", opacity: 0, transition: "opacity 0.15s",
+                        }}
+                      >
+                        <ZoomIn size={14} color="#fff" />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          ))}
+        </Box>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={!!zoomedImage} onClose={() => setZoomedImage(null)} maxWidth="md">
+      <Box sx={{ position: "relative" }}>
+        <Box component="img" src={zoomedImage ?? ""} alt="" sx={{ width: "100%", maxHeight: "85vh", objectFit: "contain", display: "block" }} />
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Download size={14} />}
+          onClick={() => zoomedImage && downloadImage(zoomedImage)}
+          sx={{
+            position: "absolute", top: 10, right: 10,
+            background: "rgba(0,0,0,0.65)", fontWeight: 700, fontSize: 12,
+            "&:hover": { background: "rgba(0,0,0,0.85)" },
+          }}
+        >
+          Download
+        </Button>
+      </Box>
+    </Dialog>
+    </>
   );
 };

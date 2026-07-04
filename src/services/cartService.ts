@@ -1,6 +1,18 @@
 import { api } from './authService';
-import { CartItem, Product } from '../types';
+import { CartInstanceDetail, CartItem, Product } from '../types';
 import { getImageUrl } from '../lib/imageUrl';
+
+export interface AddToCartDetails {
+  date: string;
+  description: string;
+  images: File[];
+}
+
+const normalizeInstanceDetail = (d: any): CartInstanceDetail => ({
+  date: d.date ?? '',
+  description: d.description ?? '',
+  images: Array.isArray(d.images) ? d.images.map((img: string) => getImageUrl(img)) : [],
+});
 
 const normalizeProduct = (p: any): Product => ({
   id: p._id ?? p.id ?? '',
@@ -24,6 +36,7 @@ const normalizeItem = (item: any): CartItem => {
     user_id: typeof item.customerid === 'string' ? item.customerid : (item.customerid?._id ?? ''),
     product_id: prod?._id ?? item.productid ?? '',
     quantity: item.quantity ?? 1,
+    instanceDetails: Array.isArray(item.instanceDetails) ? item.instanceDetails.map(normalizeInstanceDetail) : [],
     created_at: item.createdAt ?? '',
     updated_at: item.updatedAt ?? '',
     product: prod ? normalizeProduct(prod) : undefined,
@@ -37,14 +50,22 @@ export const cartService = {
     return items.map(normalizeItem);
   },
 
-  async addToCart(customerId: string, productId: string, quantity = 1): Promise<CartItem> {
-    const { data } = await api.post('/cart', { customerid: customerId, productid: productId, quantity });
+  async addToCart(customerId: string, productId: string, details: AddToCartDetails): Promise<CartItem> {
+    const formData = new FormData();
+    formData.append('customerid', customerId);
+    formData.append('productid', productId);
+    formData.append('date', details.date);
+    formData.append('description', details.description);
+    details.images.forEach((file) => formData.append('images', file));
+
+    const { data } = await api.post('/cart', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return normalizeItem(data?.data ?? data);
   },
 
-  async updateQuantity(itemId: string, quantity: number): Promise<CartItem> {
-    const { data } = await api.patch(`/cart/${itemId}`, { quantity });
-    return normalizeItem(data?.data ?? data);
+  async removeInstance(itemId: string, index: number): Promise<void> {
+    await api.delete(`/cart/${itemId}/instance/${index}`);
   },
 
   async removeFromCart(itemId: string): Promise<void> {

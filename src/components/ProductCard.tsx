@@ -9,14 +9,16 @@ import {
   Rating,
 } from '@mui/material';
 import { Heart, ShoppingCart } from 'lucide-react';
+import { useState } from 'react';
 import { Product } from '../types';
 import { getImageUrl } from '../lib/imageUrl';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { useSnackbar } from 'notistack';
-import { cartService } from '../services/cartService';
+import { cartService, AddToCartDetails } from '../services/cartService';
 import { wishlistService } from '../services/wishlistService';
 import { addToCart as addToCartAction } from '../store/slices/cartSlice';
+import { AddToCartDetailsModal } from './AddToCartDetailsModal';
 
 interface ProductCardProps {
   product: Product;
@@ -36,21 +38,32 @@ export const ProductCard = ({ product, onWishlistToggle, onAddToCart }: ProductC
   const displayPrice = product.discount_price || product.price;
   const hasDiscount = !!product.discount_price;
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!isAuthenticated || !user) {
       enqueueSnackbar('Please login to add items to cart', { variant: 'warning' });
       navigate('/login', { state: { from: location.pathname } });
       return;
     }
+    setDetailsModalOpen(true);
+  };
 
+  const handleDetailsSubmit = async (values: AddToCartDetails) => {
+    if (!user) return;
     try {
-      const item = await cartService.addToCart(user.id, product.id, 1);
+      setAddingToCart(true);
+      const item = await cartService.addToCart(user.id, product.id, values);
       dispatch(addToCartAction(item));
       enqueueSnackbar('Added to cart!', { variant: 'success' });
+      setDetailsModalOpen(false);
       onAddToCart?.();
     } catch (error) {
       enqueueSnackbar('Failed to add to cart', { variant: 'error' });
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -80,6 +93,7 @@ export const ProductCard = ({ product, onWishlistToggle, onAddToCart }: ProductC
   };
 
   return (
+    <>
     <Card
       sx={{
         cursor: 'pointer',
@@ -189,5 +203,14 @@ export const ProductCard = ({ product, onWishlistToggle, onAddToCart }: ProductC
         )}
       </CardContent>
     </Card>
+    <AddToCartDetailsModal
+      open={detailsModalOpen}
+      productImage={getImageUrl(product.images?.[0])}
+      productName={product.name}
+      submitting={addingToCart}
+      onClose={() => setDetailsModalOpen(false)}
+      onSubmit={handleDetailsSubmit}
+    />
+    </>
   );
 };

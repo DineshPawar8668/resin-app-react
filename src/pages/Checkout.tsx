@@ -123,7 +123,7 @@ export const Checkout = () => {
     if (!user || cartItems.length === 0) return;
     try {
       setProcessing(true);
-      const products = cartItems.map((i) => ({ product_id: i.product_id, quantity: i.quantity }));
+      const products = cartItems.map((i) => ({ product_id: i.product_id, quantity: i.quantity, instanceDetails: i.instanceDetails }));
       const paymentData = await paymentService.initiatePayment(user.id, products);
       setProcessing(false);
 

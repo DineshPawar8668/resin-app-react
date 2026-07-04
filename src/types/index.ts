@@ -71,11 +71,18 @@ export interface Review {
   user_profile?: UserProfile;
 }
 
+export interface CartInstanceDetail {
+  date: string;
+  description: string;
+  images: string[];
+}
+
 export interface CartItem {
   id: string;
   user_id: string;
   product_id: string;
   quantity: number;
+  instanceDetails: CartInstanceDetail[];
   created_at: string;
   updated_at: string;
   product?: Product;

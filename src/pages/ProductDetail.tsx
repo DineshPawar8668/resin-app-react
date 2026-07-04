@@ -16,13 +16,14 @@ import {
 import { Heart, ShoppingCart, Plus, Minus, Star, Send, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { productService } from "../services/productService";
-import { cartService } from "../services/cartService";
+import { cartService, AddToCartDetails } from "../services/cartService";
 import { wishlistService } from "../services/wishlistService";
 import { productReviewService, ProductReview } from "../services/productReviewService";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { useSnackbar } from "notistack";
 import { setWishlistItems } from "../store/slices/wishlistSlice";
 import { addToCart as addToCartAction } from "../store/slices/cartSlice";
+import { AddToCartDetailsModal } from "../components/AddToCartDetailsModal";
 import type { ProductItem } from "../types";
 
 const PINK = { main: "#C2185B", light: "#FCE4EC", dark: "#880E4F", 50: "#FFF0F6" };
@@ -98,25 +99,48 @@ export const ProductDetail = () => {
     } catch { /* reviews are optional */ }
   };
 
-  const handleAddToCart = async () => {
-    if (!isAuthenticated || !user) { enqueueSnackbar("Please login to add items to cart", { variant: "warning" }); navigate("/login"); return; }
-    try {
-      setCartLoading(true);
-      const item = await cartService.addToCart(user.id, id!, qty);
-      dispatch(addToCartAction(item));
-      enqueueSnackbar("Added to cart!", { variant: "success" });
-    } catch { enqueueSnackbar("Failed to add to cart", { variant: "error" }); }
-    finally { setCartLoading(false); }
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [detailsModalKey, setDetailsModalKey] = useState(0);
+  const [remainingUnits, setRemainingUnits] = useState(0);
+  const [pendingAction, setPendingAction] = useState<"cart" | "buyNow" | null>(null);
+
+  const startAddFlow = (action: "cart" | "buyNow") => {
+    if (!isAuthenticated || !user) {
+      enqueueSnackbar(action === "cart" ? "Please login to add items to cart" : "Please login to continue", { variant: "warning" });
+      navigate("/login");
+      return;
+    }
+    setPendingAction(action);
+    setRemainingUnits(qty);
+    setDetailsModalKey((k) => k + 1);
+    setDetailsModalOpen(true);
   };
 
-  const handleBuyNow = async () => {
-    if (!isAuthenticated || !user) { enqueueSnackbar("Please login to continue", { variant: "warning" }); navigate("/login"); return; }
+  const handleAddToCart = () => startAddFlow("cart");
+  const handleBuyNow = () => startAddFlow("buyNow");
+
+  const handleDetailsSubmit = async (values: AddToCartDetails) => {
+    if (!user) return;
     try {
       setCartLoading(true);
-      const item = await cartService.addToCart(user.id, id!, qty);
+      const item = await cartService.addToCart(user.id, id!, values);
       dispatch(addToCartAction(item));
-      navigate("/cart");
-    } catch { enqueueSnackbar("Failed to add to cart", { variant: "error" }); setCartLoading(false); }
+      const left = remainingUnits - 1;
+      setRemainingUnits(left);
+      if (left > 0) {
+        setDetailsModalKey((k) => k + 1);
+      } else {
+        setDetailsModalOpen(false);
+        enqueueSnackbar("Added to cart!", { variant: "success" });
+        if (pendingAction === "buyNow") navigate("/cart");
+        setPendingAction(null);
+      }
+    } catch {
+      enqueueSnackbar("Failed to add to cart", { variant: "error" });
+      setDetailsModalOpen(false);
+    } finally {
+      setCartLoading(false);
+    }
   };
 
   const handleWishlist = async () => {
@@ -593,6 +617,16 @@ export const ProductDetail = () => {
         </>
       )}
     </Container>
+    <AddToCartDetailsModal
+      key={detailsModalKey}
+      open={detailsModalOpen}
+      productImage={product.images?.[0] || product.image || ""}
+      productName={product.title}
+      submitting={cartLoading}
+      title={qty > 1 ? `Item ${qty - remainingUnits + 1} of ${qty} — who is this for?` : undefined}
+      onClose={() => { setDetailsModalOpen(false); setPendingAction(null); }}
+      onSubmit={handleDetailsSubmit}
+    />
     </>
   );
 };

@@ -20,10 +20,11 @@ import { useTheme } from "@mui/material/styles";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { productService, ProductPagination } from "../services/productService";
-import { cartService } from "../services/cartService";
+import { cartService, AddToCartDetails } from "../services/cartService";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { addToCart as addToCartAction } from "../store/slices/cartSlice";
 import { getImageUrl } from "../lib/imageUrl";
+import { AddToCartDetailsModal } from "../components/AddToCartDetailsModal";
 
 const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
 
@@ -67,6 +68,7 @@ const Products = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [cartLoadingId, setCartLoadingId] = useState<string | null>(null);
+  const [addModalProduct, setAddModalProduct] = useState<any | null>(null);
   const [page, setPage] = useState(1);
 
   const [selectedCats, setSelectedCats] = useState<string[]>(
@@ -162,18 +164,24 @@ const Products = () => {
     return () => window.removeEventListener("scroll", handleScrollLoadMore);
   }, [handleScrollLoadMore]);
 
-  const handleAddToCart = async (e: React.MouseEvent, product: any) => {
+  const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.stopPropagation();
     if (!isAuthenticated || !user) {
       enqueueSnackbar("Please login to add to cart", { variant: "warning" });
       navigate("/login");
       return;
     }
+    setAddModalProduct(product);
+  };
+
+  const handleDetailsSubmit = async (values: AddToCartDetails) => {
+    if (!user || !addModalProduct) return;
     try {
-      setCartLoadingId(product.id);
-      const item = await cartService.addToCart(user.id, product.id);
+      setCartLoadingId(addModalProduct.id);
+      const item = await cartService.addToCart(user.id, addModalProduct.id, values);
       dispatch(addToCartAction(item));
       enqueueSnackbar("Added to cart!", { variant: "success" });
+      setAddModalProduct(null);
     } catch {
       enqueueSnackbar("Failed to add to cart", { variant: "error" });
     } finally {
@@ -543,6 +551,14 @@ const Products = () => {
         )}
       </Box>
     </Box>
+    <AddToCartDetailsModal
+      open={!!addModalProduct}
+      productImage={getImageUrl(addModalProduct?.images?.[0])}
+      productName={addModalProduct?.name ?? "Product"}
+      submitting={!!addModalProduct && cartLoadingId === addModalProduct.id}
+      onClose={() => setAddModalProduct(null)}
+      onSubmit={handleDetailsSubmit}
+    />
     </>
   );
 };

@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Read(//c/c/Users/dinesh.pawar/OneDrive - ESDS Software Solution Limited/Desktop/IIBF-P/**)"
+      "Read(//c/c/Users/dinesh.pawar/OneDrive - ESDS Software Solution Limited/Desktop/IIBF-P/**)",
+      "Bash(find '/c/Users/dinesh.pawar/OneDrive - ESDS Software Solution Limited/Desktop/IIBF-P/resin-server/src' -iname *payment*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\dinesh.pawar\\OneDrive - ESDS Software Solution Limited\\Desktop\\IIBF-P\\resin-server\\src\\services",
+      "c:\\Users\\dinesh.pawar\\OneDrive - ESDS Software Solution Limited\\Desktop\\IIBF-P\\resin-server\\src\\controllers",
+      "c:\\Users\\dinesh.pawar\\OneDrive - ESDS Software Solution Limited\\Desktop\\IIBF-P\\resin-server\\src\\routes",
+      "c:\\Users\\dinesh.pawar\\OneDrive - ESDS Software Solution Limited\\Desktop\\IIBF-P\\resin-server\\src\\models"
     ]
   }
 }

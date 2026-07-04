@@ -1,4 +1,11 @@
 import { api } from './authService';
+import { CartInstanceDetail } from '../types';
+
+export interface CheckoutProduct {
+  product_id: string;
+  quantity: number;
+  instanceDetails?: CartInstanceDetail[];
+}
 
 export interface InitiatePaymentResponse {
   razorpay_order_id: string;
@@ -37,7 +44,7 @@ interface RazorpayInstance {
 }
 
 export const paymentService = {
-  async initiatePayment(customerid: string, products: { product_id: string; quantity: number }[]): Promise<InitiatePaymentResponse> {
+  async initiatePayment(customerid: string, products: CheckoutProduct[]): Promise<InitiatePaymentResponse> {
     const { data } = await api.post('/payments/initiate', { customerid, products });
     return data?.data ?? data;
   },
@@ -47,7 +54,7 @@ export const paymentService = {
     razorpay_payment_id: string,
     razorpay_signature: string,
     customerid: string,
-    products: { product_id: string; quantity: number }[],
+    products: CheckoutProduct[],
     shippingAddress?: Record<string, any>,
   ): Promise<any> {
     const { data } = await api.post('/payments/verify', {
