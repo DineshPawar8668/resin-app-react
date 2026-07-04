@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Box, Avatar, Menu, MenuItem, Divider, Typography, InputBase, IconButton } from "@mui/material";
+import { Box, Avatar, Menu, MenuItem, Divider, Typography, InputBase, IconButton, Drawer, List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { productService } from "../../services/productService";
-import { useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, User, LogOut, Lock, Tag, Package, ClipboardList, ShoppingBag, Heart, X } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Search, ShoppingCart, User, LogOut, Lock, Tag, Package, ClipboardList, ShoppingBag, Heart, X, Menu as MenuIcon, Phone, Info } from "lucide-react";
 import { useAppSelector } from "../../store/hooks";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -19,6 +19,7 @@ const C = {
 
 export const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signOut } = useAuth();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const cartCount = useAppSelector((state) => state.cart.items.length);
@@ -28,6 +29,7 @@ export const Header = () => {
   const [searchVal, setSearchVal] = useState("");
   const [barVisible, setBarVisible] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const menuOpen = Boolean(anchorEl);
 
   useEffect(() => {
@@ -97,6 +99,14 @@ export const Header = () => {
             gap: 2,
           }}
         >
+          {/* Hamburger — mobile only */}
+          <IconButton
+            onClick={() => setDrawerOpen(true)}
+            sx={{ display: { xs: "flex", md: "none" }, color: C.grey, mr: 0.5, "&:hover": { color: C.pink } }}
+          >
+            <MenuIcon size={22} />
+          </IconButton>
+
           {/* Logo */}
           <Box onClick={() => navigate("/")} sx={{ cursor: "pointer", flexShrink: 0 }}>
             <Typography
@@ -339,81 +349,75 @@ export const Header = () => {
         </Box>
       </Box>
 
-      {/* ── Category Strip ── */}
-      {categories.length > 0 && (
+      {/* ── Mobile Navigation Drawer ── */}
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        slotProps={{ paper: { sx: { width: 270, pt: 1 } } }}
+      >
+        {/* Drawer Header */}
         <Box
           sx={{
-            background: "#fff",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-            overflowX: "auto",
-            whiteSpace: "nowrap",
-            py: "6px",
-            scrollbarWidth: "none",
-            "&::-webkit-scrollbar": { display: "none" },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 2,
+            py: 1.5,
+            background: `linear-gradient(135deg, ${C.pinkDark} 0%, ${C.pink} 100%)`,
+            mb: 1,
           }}
         >
-          <Box
-            sx={{
-              maxWidth: 1280,
-              mx: "auto",
-              px: 2,
-              display: "flex",
-              gap: "4px",
-            }}
-          >
-            {categories.map((cat) => (
-              <Box
-                key={cat.id}
-                onClick={() => navigate(`/products?category=${cat.id}`)}
-                sx={{
-                  display: "inline-flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  px: "12px",
-                  py: "4px",
-                  cursor: "pointer",
-                  minWidth: 56,
-                  flexShrink: 0,
-                  color: "#333",
-                  transition: "color 0.2s",
-                  "&:hover": { color: C.pink },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: "50%",
-                    overflow: "hidden",
-                    mb: "4px",
-                    border: `2px solid #F06292`,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={cat.image || "/hero/empty-category.jpg"}
-                    alt={cat.name}
-                    sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  />
-                </Box>
-                <Typography
-                  sx={{
-                    fontSize: 10,
-                    fontFamily: '"Poppins", sans-serif',
-                    fontWeight: 600,
-                    color: "inherit",
-                    textAlign: "center",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {cat.name?.slice(0, 10)}{cat.name?.length > 12 ? "..." : ""}
-                </Typography>
-              </Box>
-            ))}
+          <Box>
+            <Typography
+              sx={{
+                fontFamily: '"Dancing Script", "Brush Script MT", cursive',
+                fontSize: 22,
+                fontWeight: 700,
+                color: "#fff",
+                lineHeight: 1,
+              }}
+            >
+              Shopi Nova
+            </Typography>
+            <Typography sx={{ fontSize: 9, fontWeight: 600, letterSpacing: 1.2, textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>
+              Plus
+            </Typography>
           </Box>
+          <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: "#fff" }}>
+            <X size={20} />
+          </IconButton>
         </Box>
-      )}
+
+        <List sx={{ px: 1 }}>
+          {[
+            { label: "Categories", path: "/categories", icon: <Tag size={18} color={C.pink} /> },
+            { label: "Products", path: "/products", icon: <Package size={18} color={C.pink} /> },
+            { label: "About Us", path: "/about-us", icon: <Info size={18} color={C.pink} /> },
+            { label: "Contact Us", path: "/contact", icon: <Phone size={18} color={C.pink} /> },
+          ].map((item) => (
+            <ListItemButton
+              key={item.label}
+              onClick={() => {
+                setDrawerOpen(false);
+                navigate(item.path);
+              }}
+              sx={{
+                borderRadius: 2,
+                mb: 0.5,
+                "&:hover": { bgcolor: C.pinkLight },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 36 }}>{item.icon}</ListItemIcon>
+              <ListItemText
+                primary={item.label}
+                slotProps={{ primary: { sx: { fontSize: 14, fontWeight: 600, color: C.text } } }}
+              />
+            </ListItemButton>
+          ))}
+        </List>
+      </Drawer>
+
     </Box>
   );
 };

@@ -1,4 +1,5 @@
 import { Box, Typography, Divider } from '@mui/material';
+import { Helmet } from 'react-helmet-async';
 import {
   ArrowLeft, Store, Users, ShoppingBag, Globe, Zap, Shield,
   CheckCircle2, TrendingUp, Layers, Link2,
@@ -69,6 +70,40 @@ export const AboutUs = () => {
   const navigate = useNavigate();
 
   return (
+    <>
+      <Helmet>
+        <title>About ShopIzara – India's Premier Handmade Resin Art Store</title>
+        <meta name="description" content="Learn about ShopIzara – India's trusted online store for handmade resin art. Our story, mission and passion for creating unique resin jewelry, home decor and gifts." />
+        <meta name="keywords" content="about shopizara, handmade resin art india, resin art brand india, resin jewelry brand" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://shopizara.com/about-us" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://shopizara.com/about-us" />
+        <meta property="og:site_name" content="ShopIzara" />
+        <meta property="og:title" content="About ShopIzara – India's Premier Handmade Resin Art Store" />
+        <meta property="og:description" content="Learn about ShopIzara – India's trusted handmade resin art store. Unique resin jewelry, home decor and gifts, crafted with love." />
+        <meta property="og:image" content="https://shopizara.com/hero/r-1.jpg" />
+        <meta property="og:locale" content="en_IN" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About ShopIzara – India's Premier Handmade Resin Art Store" />
+        <meta name="twitter:image" content="https://shopizara.com/hero/r-1.jpg" />
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            "name": "About ShopIzara",
+            "url": "https://shopizara.com/about-us",
+            "description": "ShopIzara is India's premier online store for handmade resin art products including jewelry, coasters, photo frames and home decor.",
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://shopizara.com" },
+                { "@type": "ListItem", "position": 2, "name": "About Us", "item": "https://shopizara.com/about-us" }
+              ]
+            }
+          }
+        `}</script>
+      </Helmet>
     <Box sx={{ background: '#f7f7fa', minHeight: '100vh' }}>
 
       {/* Breadcrumb bar */}
@@ -310,5 +345,6 @@ export const AboutUs = () => {
 
       </Box>
     </Box>
+    </>
   );
 };

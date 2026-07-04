@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import {
   Box, Typography, TextField, Button, CircularProgress,
 } from '@mui/material';
@@ -78,6 +79,23 @@ export const ContactPage = () => {
   };
 
   return (
+    <>
+      <Helmet>
+        <title>Contact ShopIzara – Resin Art Online Store India</title>
+        <meta name="description" content="Contact ShopIzara for queries about handmade resin art products, custom orders, delivery, returns or any help. We're here to assist you." />
+        <meta name="keywords" content="contact shopizara, resin art customer support, custom resin order india" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://shopizara.com/contact" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://shopizara.com/contact" />
+        <meta property="og:site_name" content="ShopIzara" />
+        <meta property="og:title" content="Contact ShopIzara – Handmade Resin Art Store" />
+        <meta property="og:description" content="Contact ShopIzara for queries about resin art products, custom orders or any help you need." />
+        <meta property="og:image" content="https://shopizara.com/hero/r-3.jpg" />
+        <meta property="og:locale" content="en_IN" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Contact ShopIzara – Resin Art Store" />
+      </Helmet>
     <Box sx={{ background: '#f7f7fa', minHeight: '100vh' }}>
       {/* Top breadcrumb bar */}
       <Box sx={{
@@ -238,5 +256,6 @@ export const ContactPage = () => {
         </Box>
       </Box>
     </Box>
+    </>
   );
 };

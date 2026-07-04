@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import {
   Box,
   Typography,
@@ -346,6 +347,41 @@ const Products = () => {
 
   /* ─── RENDER ────────────────────────────────────── */
   return (
+    <>
+      <Helmet>
+        <title>Buy Handmade Resin Art Online India – Jewelry, Coasters, Frames | ShopIzara</title>
+        <meta name="description" content="Browse all handmade resin art products online in India. Shop resin jewelry, coasters, photo frames, home decor, gift sets and more. Best prices. Free delivery above ₹499. ShopIzara." />
+        <meta name="keywords" content="buy resin art online india, handmade resin jewelry, resin coasters buy online, resin photo frames india, resin home decor, resin gift sets india, resin products shop, best resin art india" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://shopizara.com/products" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://shopizara.com/products" />
+        <meta property="og:site_name" content="ShopIzara" />
+        <meta property="og:title" content="Buy Handmade Resin Art Online India | ShopIzara" />
+        <meta property="og:description" content="Browse all handmade resin art products. Shop resin jewelry, coasters, frames, home decor & gifts. Free delivery above ₹499." />
+        <meta property="og:image" content="https://shopizara.com/hero/r-4.jpg" />
+        <meta property="og:locale" content="en_IN" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Buy Handmade Resin Art Online India | ShopIzara" />
+        <meta name="twitter:description" content="Browse all handmade resin art products. Shop resin jewelry, coasters, frames & home decor." />
+        <meta name="twitter:image" content="https://shopizara.com/hero/r-4.jpg" />
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            "name": "Handmade Resin Art Products – ShopIzara",
+            "url": "https://shopizara.com/products",
+            "description": "Complete collection of handmade resin art products available online in India including jewelry, coasters, photo frames and home decor.",
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://shopizara.com" },
+                { "@type": "ListItem", "position": 2, "name": "All Products", "item": "https://shopizara.com/products" }
+              ]
+            }
+          }
+        `}</script>
+      </Helmet>
     <Box sx={{ background: "#f7f7fa", minHeight: "100vh" }}>
       <Box sx={{ maxWidth: 1400, mx: "auto", px: { xs: 1.5, sm: 2, md: 3 }, py: 3 }}>
         {/* Top bar */}
@@ -505,6 +541,7 @@ const Products = () => {
         )}
       </Box>
     </Box>
+    </>
   );
 };
 

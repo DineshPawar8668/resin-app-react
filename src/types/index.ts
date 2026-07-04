@@ -7,6 +7,10 @@ export enum ProductType {
 export interface ProductItem {
   id: string;
   image: string;
+  images: string[];           // full CDN URLs (normalized)
+  imagePublicIds: string[];   // raw Cloudinary public_ids (for edit form)
+  video?: string;             // full CDN video URL
+  videoPublicId?: string;     // raw Cloudinary video public_id (for edit form)
   title: string;
   description: string;
   price: number;
@@ -14,6 +18,8 @@ export interface ProductItem {
   offerprice: number;
   product_type: ProductType;
   category_id?: string;
+  parent_product_id?: string;
+  size?: string;
   is_active: boolean;
   is_deleted?: boolean;
   avgRating?: number;
@@ -51,6 +57,8 @@ export interface Product {
   created_at: string;
   updated_at: string;
   category?: Category;
+  size?: string;
+  parent_product_id?: string;
 }
 
 export interface Review {

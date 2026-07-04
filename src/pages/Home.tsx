@@ -1,1226 +1,800 @@
-import { useEffect, useState, useRef } from "react";
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  Avatar,
-  InputBase,
-  Badge,
-  Chip,
-  IconButton,
-  Paper,
-} from "@mui/material";
+import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { Box, Typography, Grid, Avatar, Chip } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { ProductCard } from "../components/ProductCard";
 import { Product, Category } from "../types";
 import { productService } from "../services/productService";
-import {
-  Search,
-  ShoppingCart,
-  Heart,
-  User,
-  ChevronLeft,
-  ChevronRight,
-  Star,
-  Package,
-  Shield,
-  Truck,
-  RefreshCw,
-  Zap,
-  Tag,
-  Grid3X3,
-} from "lucide-react";
+import { Star, Truck, RefreshCw, Shield, Package, Heart, Sparkles, Crown } from "lucide-react";
 import { BASE_URL } from "../constant";
 import { orderReviewService, OrderReview } from "../services/orderReviewService";
 
-/* ─── PINK PALETTE ─────────────────────────────── */
-const PINK = {
-  600: "#C2185B",
-  500: "#D81B60",
-  400: "#E91E63",
-  300: "#F06292",
-  100: "#FCE4EC",
-  50: "#FFF0F6",
+/* ─── LUXURY PALETTE ─────────────────────────────── */
+const L = {
+  dark: "#1A0A12",
+  rose: "#C2185B",
+  roseLight: "#FCE4EC",
+  gold: "#C9A84C",
+  goldLight: "rgba(201,168,76,0.15)",
+  cream: "#FFF8F2",
+  warm: "#F5EDE5",
+  white: "#FFFFFF",
+  text: "#1A0A12",
+  muted: "#7A6B65",
 };
 
-const NAV_H = 64;
-
-/* ─── INLINE STYLES ─────────────────────────────── */
-const styles: Record<string, React.CSSProperties> = {
-  /* top-nav */
-  topNav: {
-    position: "sticky",
-    top: 0,
-    zIndex: 1200,
-    background: `linear-gradient(90deg, ${PINK[600]} 0%, ${PINK[500]} 100%)`,
-    height: NAV_H,
-    display: "flex",
-    alignItems: "center",
-    boxShadow: "0 2px 8px rgba(194,24,91,0.35)",
-  },
-  navInner: {
-    width: "100%",
-    maxWidth: 1280,
-    margin: "0 auto",
-    padding: "0 16px",
-    display: "flex",
-    alignItems: "center",
-    gap: 24,
-  },
-  logo: {
-    color: "#fff",
-    fontFamily: '"Poppins", sans-serif',
-    fontWeight: 800,
-    fontSize: 26,
-    letterSpacing: -0.5,
-    lineHeight: 1,
-    flexShrink: 0,
-    cursor: "pointer",
-    userSelect: "none",
-  },
-  logoTag: {
-    fontSize: 10,
-    fontStyle: "italic",
-    color: "#FFD54F",
-    display: "block",
-    marginTop: 3,
-    fontWeight: 400,
-    letterSpacing: 0.3,
-  },
-  searchWrap: {
-    flex: 1,
-    maxWidth: 580,
-    background: "#fff",
-    borderRadius: 4,
-    display: "flex",
-    alignItems: "center",
-    overflow: "hidden",
-    height: 40,
-  },
-  searchInput: {
-    flex: 1,
-    padding: "0 14px",
-    fontSize: 14,
-    border: "none",
-    outline: "none",
-    fontFamily: '"Poppins", sans-serif',
-    color: "#333",
-  },
-  searchBtn: {
-    background: PINK[500],
-    border: "none",
-    height: 40,
-    width: 48,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    flexShrink: 0,
-  },
-  navActions: {
-    display: "flex",
-    alignItems: "center",
-    gap: 24,
-    marginLeft: "auto",
-    flexShrink: 0,
-  },
-  navBtn: {
-    color: "#fff",
-    fontFamily: '"Poppins", sans-serif',
-    fontWeight: 600,
-    fontSize: 14,
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    cursor: "pointer",
-    whiteSpace: "nowrap" as const,
-    background: "none",
-    border: "none",
-    padding: 0,
-  },
-  /* category strip */
-  catStrip: {
-    background: "#fff",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-    overflowX: "auto",
-    whiteSpace: "nowrap" as const,
-    padding: "10px 0",
-    scrollbarWidth: "none" as const,
-  },
-  catItem: {
-    display: "inline-flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
-    padding: "6px 20px",
-    cursor: "pointer",
-    minWidth: 80,
-    transition: "color 0.2s",
-  },
-  catIconWrap: {
-    width: 60,
-    height: 60,
-    minWidth: 60,
-    minHeight: 60,
-    borderRadius: "50%",
-    overflow: "hidden",
-    marginBottom: 6,
-    border: `2px solid ${PINK[300]}`,
-    flexShrink: 0,
-  },
-  catIcon: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover" as const,
-    display: "block",
-  },
-  catLabel: {
-    fontSize: 12,
-    fontFamily: '"Poppins", sans-serif',
-    fontWeight: 600,
-    color: "#111111",
-    textAlign: "center" as const,
-  },
-  /* hero banner */
-  bannerWrap: {
-    position: "relative",
-    width: "100%",
-    height: 340,
-    overflow: "hidden",
-    background: PINK[100],
-  },
-  bannerSlide: {
-    position: "absolute",
-    inset: 0,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    transition: "opacity 0.6s ease",
-  },
-  bannerArrow: {
-    position: "absolute",
-    top: "50%",
-    transform: "translateY(-50%)",
-    background: "rgba(255,255,255,0.85)",
-    border: "none",
-    borderRadius: "50%",
-    width: 36,
-    height: 36,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    zIndex: 10,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-  },
-  bannerDots: {
-    position: "absolute",
-    bottom: 12,
-    left: "50%",
-    transform: "translateX(-50%)",
-    display: "flex",
-    gap: 6,
-  },
-  /* section heading */
-  sectionHead: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "18px 20px 14px",
-    borderBottom: `1px solid ${PINK[100]}`,
-  },
-  sectionTitle: {
-    fontFamily: '"Poppins", sans-serif',
-    fontWeight: 700,
-    fontSize: 18,
-    color: "#111111",
-  },
-  viewAll: {
-    background: PINK[500],
-    color: "#fff",
-    border: "none",
-    borderRadius: 2,
-    padding: "8px 20px",
-    fontFamily: '"Poppins", sans-serif',
-    fontWeight: 600,
-    fontSize: 13,
-    cursor: "pointer",
-  },
-  /* deal card */
-  dealCard: {
-    display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
-    padding: "16px 10px 10px",
-    cursor: "pointer",
-    borderRight: "1px solid #f0f0f0",
-    transition: "box-shadow 0.2s",
-    minWidth: 160,
-  },
-  dealImg: {
-    width: 120,
-    height: 120,
-    objectFit: "contain" as const,
-    marginBottom: 10,
-  },
-  dealName: {
-    fontSize: 13,
-    fontFamily: '"Poppins", sans-serif',
-    fontWeight: 600,
-    color: "#111111",
-    textAlign: "center" as const,
-    lineHeight: 1.3,
-  },
-  dealDiscount: {
-    fontSize: 13,
-    fontFamily: '"Poppins", sans-serif',
-    fontWeight: 700,
-    color: "#388E3C",
-    marginTop: 4,
-  },
-  /* trust bar */
-  trustBar: {
-    display: "flex",
-    justifyContent: "center",
-    gap: 40,
-    flexWrap: "wrap" as const,
-    padding: "24px 16px",
-    background: "#fff",
-    borderTop: `3px solid ${PINK[400]}`,
-  },
-  trustItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    fontFamily: '"Poppins", sans-serif',
-    fontSize: 13,
-    fontWeight: 600,
-    color: "#111111",
-  },
-  /* footer */
-  footer: {
-    background: "#172337",
-    color: "#fff",
-    padding: "40px 16px 20px",
-  },
-};
-
-const VIDEO_FOLDER = '/hero/';
-const buildSrc = (filename: string) => `${VIDEO_FOLDER}${filename}`;
-
-/* ─── BANNER SLIDES ──────────────────────────────── */
-const BANNERS = [
-  {
-    bg: `linear-gradient(120deg, ${PINK[600]} 0%, ${PINK[300]} 100%)`,
-    label: "Big Pink Sale",
-    sub: "Up to 80% off on handcrafted resin art",
-    cta: "Shop Now",
-    img: "r-3.jpg",
-  },
-  {
-    bg: `linear-gradient(120deg, #880E4F 0%, ${PINK[500]} 100%)`,
-    label: "New Arrivals",
-    sub: "Explore the freshest resin collections",
-    cta: "Discover",
-    img: "r-4.jpg",
-  },
-  {
-    bg: `linear-gradient(120deg, ${PINK[400]} 0%, #FFB3C6 100%)`,
-    label: "Gift Sets",
-    sub: "Beautiful handmade pieces for every occasion",
-    cta: "Gift Now",
-    img: "r-1.jpg",
-  },
+const FALLBACK_BANNERS = [
+  { img: "/hero/r-3.jpg", tag: "New Collection", title: "Welcome to\nLuxury Collection", sub: "Where elegance, craftsmanship & timeless beauty define every exquisite piece you discover." },
+  { img: "/hero/r-4.jpg", tag: "Trending Now", title: "Explore\nNew Arrivals", sub: "Discover freshly crafted resin pieces made with love, just for you." },
+  { img: "/hero/r-1.jpg", tag: "Perfect Gifts", title: "Gift Boxes\n& Sets", sub: "Beautiful handmade resin sets for every occasion that deserves to be remembered." },
 ];
 
-const CAT_ICONS = [
-  {
-    label: "Jewellery",
-    img: "https://images.pexels.com/photos/1458329/pexels-photo-1458329.jpeg?auto=compress&w=80",
-  },
-  {
-    label: "Home Decor",
-    img: "https://images.pexels.com/photos/1090638/pexels-photo-1090638.jpeg?auto=compress&w=80",
-  },
-  {
-    label: "Coasters",
-    img: "https://images.pexels.com/photos/5591663/pexels-photo-5591663.jpeg?auto=compress&w=80",
-  },
-  {
-    label: "Keychains",
-    img: "https://images.pexels.com/photos/1070534/pexels-photo-1070534.jpeg?auto=compress&w=80",
-  },
-  {
-    label: "Wall Art",
-    img: "https://images.pexels.com/photos/3094799/pexels-photo-3094799.jpeg?auto=compress&w=80",
-  },
-  {
-    label: "Trays",
-    img: "https://images.pexels.com/photos/1148957/pexels-photo-1148957.jpeg?auto=compress&w=80",
-  },
-  {
-    label: "Clocks",
-    img: "https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&w=80",
-  },
-  {
-    label: "Gift Boxes",
-    img: "https://images.pexels.com/photos/1793035/pexels-photo-1793035.jpeg?auto=compress&w=80",
-  },
+const BANNER_TAGS = ["New Collection", "Trending Now", "Perfect Gifts", "Editor's Pick", "Bestseller", "Exclusive"];
+const BANNER_SUBS = [
+  "Where elegance, craftsmanship & timeless beauty define every exquisite piece you discover.",
+  "Discover freshly crafted resin pieces made with love, just for you.",
+  "Beautiful handmade resin sets for every occasion that deserves to be remembered.",
+  "Each piece is a masterpiece — crafted by hand, designed to last a lifetime.",
+  "Premium quality resin art delivered right to your doorstep.",
+  "Unique designs, vibrant colors, and impeccable craftsmanship await you.",
 ];
 
-// const deals = [
-//   {
-//     name: "Resin Coaster Set",
-//     discount: "70% off",
-//     price: "299",
-//     originalPrice: "999",
-//     boughtCount: "400+",
-//     img: "https://images.pexels.com/photos/5591663/pexels-photo-5591663.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Ocean Wave Resin Art",
-//     discount: "65% off",
-//     price: "699",
-//     originalPrice: "1,999",
-//     boughtCount: "1K+",
-//     img: "https://images.pexels.com/photos/3094799/pexels-photo-3094799.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Floral Keychain",
-//     discount: "55% off",
-//     price: "185",
-//     originalPrice: "499",
-//     boughtCount: "700+",
-//     img: "https://images.pexels.com/photos/1070534/pexels-photo-1070534.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Geode Resin Tray",
-//     discount: "60% off",
-//     price: "900",
-//     originalPrice: "2,249",
-//     boughtCount: "700+",
-//     img: "https://images.pexels.com/photos/1148957/pexels-photo-1148957.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Galaxy Resin Clock",
-//     discount: "50% off",
-//     price: "584",
-//     originalPrice: "1,168",
-//     boughtCount: "100+",
-//     img: "https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Pearl Drop Earrings",
-//     discount: "45% off",
-//     price: "854",
-//     originalPrice: "1,553",
-//     boughtCount: "200+",
-//     img: "https://images.pexels.com/photos/1458329/pexels-photo-1458329.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Resin Coaster Set",
-//     discount: "70% off",
-//     price: "299",
-//     originalPrice: "999",
-//     boughtCount: "400+",
-//     img: "https://images.pexels.com/photos/5591663/pexels-photo-5591663.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Ocean Wave Resin Art",
-//     discount: "65% off",
-//     price: "699",
-//     originalPrice: "1,999",
-//     boughtCount: "1K+",
-//     img: "https://images.pexels.com/photos/3094799/pexels-photo-3094799.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Floral Keychain",
-//     discount: "55% off",
-//     price: "185",
-//     originalPrice: "499",
-//     boughtCount: "700+",
-//     img: "https://images.pexels.com/photos/1070534/pexels-photo-1070534.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Geode Resin Tray",
-//     discount: "60% off",
-//     price: "900",
-//     originalPrice: "2,249",
-//     boughtCount: "700+",
-//     img: "https://images.pexels.com/photos/1148957/pexels-photo-1148957.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Galaxy Resin Clock",
-//     discount: "50% off",
-//     price: "584",
-//     originalPrice: "1,168",
-//     boughtCount: "100+",
-//     img: "https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&w=300",
-//   },
-//   {
-//     name: "Pearl Drop Earrings",
-//     discount: "45% off",
-//     price: "854",
-//     originalPrice: "1,553",
-//     boughtCount: "200+",
-//     img: "https://images.pexels.com/photos/1458329/pexels-photo-1458329.jpeg?auto=compress&w=300",
-//   },
-// ];
-
-const TESTIMONIALS = [
-  {
-    name: "Sarah Johnson",
-    avatar: "https://i.pravatar.cc/150?img=1",
-    rating: 5,
-    comment:
-      "Absolutely stunning pieces! The quality is exceptional and shipping was fast.",
-  },
-  {
-    name: "Michael Chen",
-    avatar: "https://i.pravatar.cc/150?img=2",
-    rating: 5,
-    comment: "These resin products are works of art. Perfect for gifts!",
-  },
-  {
-    name: "Emma Williams",
-    avatar: "https://i.pravatar.cc/150?img=3",
-    rating: 5,
-    comment:
-      "I love the attention to detail. Every piece is unique and beautiful.",
-  },
-];
-
-const FALLBACK_PRODUCTS = [
-  {
-    name: "Resin Coaster Set of 4",
-    img: "https://images.pexels.com/photos/5591663/pexels-photo-5591663.jpeg?auto=compress&w=300",
-    price: "299",
-    original_price: "999",
-    discount_percent: 70,
-    rating: 4.2,
-    review_count: 328,
-    badge: null,
-  },
-  {
-    name: "Pearl Drop Resin Earrings",
-    img: "https://images.pexels.com/photos/1458329/pexels-photo-1458329.jpeg?auto=compress&w=300",
-    price: "854",
-    original_price: "1,499",
-    discount_percent: 43,
-    rating: 4.8,
-    review_count: 512,
-    badge: "Best Seller",
-    is_sponsored: true,
-  },
-  {
-    name: "Ocean Wave Resin Wall Art",
-    img: "https://images.pexels.com/photos/3094799/pexels-photo-3094799.jpeg?auto=compress&w=300",
-    price: "1,299",
-    original_price: "2,499",
-    discount_percent: 48,
-    rating: 4.5,
-    review_count: 189,
-    badge: null,
-  },
-  {
-    name: "Geode Resin Serving Tray",
-    img: "https://images.pexels.com/photos/1148957/pexels-photo-1148957.jpeg?auto=compress&w=300",
-    price: "900",
-    original_price: "2,249",
-    discount_percent: 60,
-    rating: 4.3,
-    review_count: 94,
-    badge: "New",
-    is_sponsored: true,
-  },
-  {
-    name: "Galaxy Resin Wall Clock",
-    img: "https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&w=300",
-    price: "584",
-    original_price: "1,168",
-    discount_percent: 50,
-    rating: 4.7,
-    review_count: 276,
-    badge: null,
-  },
-  {
-    name: "Floral Pressed Resin Keychain",
-    img: "https://images.pexels.com/photos/1070534/pexels-photo-1070534.jpeg?auto=compress&w=300",
-    price: "185",
-    original_price: "499",
-    discount_percent: 63,
-    rating: 4.4,
-    review_count: 441,
-    badge: "Best Seller",
-    is_sponsored: true,
-  },
-];
-
-/* ─── COMPONENT ──────────────────────────────────── */
 export const Home = () => {
   const navigate = useNavigate();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [deals, setDeals] = useState<Product[]>([])
+  const [deals, setDeals] = useState<Product[]>([]);
+  const [bestDeals, setBestDeals] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [slide, setSlide] = useState(0);
-  const [cartCount] = useState(2);
   const [reviews, setReviews] = useState<OrderReview[]>([]);
 
-  const loadData = async () => {
-    try {
-      const [products, cats, fetchedReviews] = await Promise.all([
-        productService.getProducts(),
-        productService.getCategories(),
-        orderReviewService.getAll(6),
-      ]);
-      setDeals(products);
-      setFeaturedProducts(products.filter((p) => p.is_featured).slice(0, 8));
-      setCategories(cats);
-      setReviews(fetchedReviews);
-    } catch (error) {
-      console.error("Failed to load data:", error);
-    }
-  };
-
-
-  console.log("deals", deals)
-  console.log("products", featuredProducts)
-  console.log("cats", categories)
-
-  const prevSlide = () =>
-    setSlide((s) => (s - 1 + BANNERS.length) % BANNERS.length);
-  const nextSlide = () => setSlide((s) => (s + 1) % BANNERS.length);
-
   useEffect(() => {
-    loadData()
-  }, [])
+    (async () => {
+      try {
+        const [products, cats, fetchedReviews] = await Promise.all([
+          productService.getProducts(),
+          productService.getCategories(),
+          orderReviewService.getAll(6),
+        ]);
+        // one product per unique category, max 4
+        const seenCats = new Set<string>();
+        const popularByCat: Product[] = [];
+        for (const p of products) {
+          if (p.category_id && !seenCats.has(p.category_id)) {
+            seenCats.add(p.category_id);
+            popularByCat.push(p);
+          }
+          if (popularByCat.length === 4) break;
+        }
+        setCategories(cats);
+        setDeals(popularByCat.length === 4 ? popularByCat : products.slice(0, 4));
+        setBestDeals(products.filter((p) => p.discount_price).slice(0, 8));
+        setFeaturedProducts(products.filter((p) => p.is_featured).slice(0, 8));
+        setReviews(fetchedReviews);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
+
+  const banners = categories.length > 0
+    ? categories.map((cat, i) => ({
+        img: cat.image || cat.image_url || FALLBACK_BANNERS[i % FALLBACK_BANNERS.length].img,
+        tag: BANNER_TAGS[i % BANNER_TAGS.length],
+        title: cat.name,
+        sub: BANNER_SUBS[i % BANNER_SUBS.length],
+      }))
+    : FALLBACK_BANNERS;
+
+  /* auto-slide banner */
+  useEffect(() => {
+    const len = banners.length;
+    const t = setInterval(() => setSlide((s) => (s + 1) % len), 4500);
+    return () => clearInterval(t);
+  }, [banners.length]);
 
   return (
-    <Box
-      sx={{
-        background: "#f1f3f6",
-        minHeight: "100vh",
-        fontFamily: '"Poppins", sans-serif',
-      }}
-    >
-      {/* ── MAIN CONTENT ─────────────────────────── */}
-      <Box
-        sx={{
-          maxWidth: 1280,
-          mx: "auto",
-          px: { xs: 1, md: 2 },
-          py: 2,
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
-      >
-        {/* ── DEALS OF THE DAY ─────────────────── */}
-        {deals?.length > 0 && <Box
-          sx={{
-            background: "#fff",
-            borderRadius: 2,
-            overflow: "hidden",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-          }}
-        >
-          {/* Header - same as before */}
-          <div style={styles.sectionHead}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Tag size={20} color={PINK[500]} />
-              <span style={styles.sectionTitle}>Deal of the Day</span>
-              {/* <Chip
-                label="Ends in 08:24:15"
-                size="small"
-                sx={{
-                  background: PINK[100],
-                  color: PINK[600],
-                  fontWeight: 700,
-                  fontSize: 11,
-                }}
-              /> */}
-            </div>
-            <button
-              style={styles.viewAll}
-              onClick={() => navigate("/products/")}
-            >
-              VIEW ALL
-            </button>
-          </div>
+    <>
+      <Helmet>
+        <title>ShopIzara – Buy Handmade Resin Art Online India | Jewelry, Home Decor & Gifts</title>
+        <meta name="description" content="Shop premium handmade resin art online in India. Buy unique resin jewelry, coasters, photo frames, home decor & gifts. 100% handcrafted. Free delivery above ₹499. Best resin products at ShopIzara." />
+        <meta name="keywords" content="resin art online india, handmade resin jewelry buy online, resin home decor india, resin coasters online, resin photo frames india, buy resin products, custom resin art india, resin gifts india, handcrafted resin art, resin jewelry online shopping" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://shopizara.com/" />
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://shopizara.com/" />
+        <meta property="og:site_name" content="ShopIzara" />
+        <meta property="og:title" content="ShopIzara – Buy Handmade Resin Art Online India" />
+        <meta property="og:description" content="Shop premium handmade resin art in India. Resin jewelry, coasters, photo frames, home decor & gifts. Free delivery above ₹499." />
+        <meta property="og:image" content="https://shopizara.com/hero/r-3.jpg" />
+        <meta property="og:image:alt" content="ShopIzara Handmade Resin Art Collection" />
+        <meta property="og:locale" content="en_IN" />
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="ShopIzara – Buy Handmade Resin Art Online India" />
+        <meta name="twitter:description" content="Shop premium handmade resin art in India. Resin jewelry, coasters, frames & home decor." />
+        <meta name="twitter:image" content="https://shopizara.com/hero/r-3.jpg" />
+        {/* JSON-LD: WebSite */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "ShopIzara",
+            "url": "https://shopizara.com",
+            "description": "Premium handmade resin art products – jewelry, coasters, frames, home decor and gifts. Crafted with love in India.",
+            "inLanguage": "en-IN",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://shopizara.com/products?search={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        `}</script>
+        {/* JSON-LD: Organization */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "ShopIzara",
+            "url": "https://shopizara.com",
+            "logo": "https://shopizara.com/hero/r-3.jpg",
+            "description": "ShopIzara is an online store specializing in premium handmade resin art products including jewelry, coasters, photo frames and home decor items.",
+            "foundingLocation": "India",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer service",
+              "url": "https://shopizara.com/contact",
+              "availableLanguage": ["Hindi", "English"]
+            },
+            "sameAs": []
+          }
+        `}</script>
+        {/* JSON-LD: Store */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "OnlineStore",
+            "name": "ShopIzara",
+            "url": "https://shopizara.com",
+            "description": "Buy handmade resin art online in India. Premium quality resin jewelry, coasters, photo frames, home decor and gifts.",
+            "image": "https://shopizara.com/hero/r-3.jpg",
+            "priceRange": "₹₹",
+            "currenciesAccepted": "INR",
+            "paymentAccepted": "Credit Card, Debit Card, UPI, Net Banking",
+            "areaServed": "IN",
+            "hasOfferCatalog": {
+              "@type": "OfferCatalog",
+              "name": "Handmade Resin Art Products",
+              "itemListElement": [
+                { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Resin Jewelry" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Resin Coasters" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Resin Photo Frames" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Resin Home Decor" } },
+                { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Resin Gift Sets" } }
+              ]
+            }
+          }
+        `}</script>
+      </Helmet>
 
-          {/* Deal Cards */}
-          <Box
-            sx={{
-              display: "flex",
-              overflowX: "auto",
-              scrollbarWidth: "none",
-              "&::-webkit-scrollbar": { display: "none" },
-            }}
-          >
-            {deals.map((d, i) => (
-              <Box
-                key={i}
-                onClick={() => navigate(`/products/${d?.id}`)}
-                sx={{
-                  minWidth: 180,
-                  maxWidth: 180,
-                  flexShrink: 0,
-                  padding: "14px 10px",
-                  borderRight:
-                    i < deals.length - 1 ? "1px solid #f5f5f5" : "none",
-                  cursor: "pointer",
-                  transition: "box-shadow 0.2s",
-                  "&:hover": { boxShadow: `inset 0 -3px 0 ${PINK[400]}` },
-                }}
-              >
-                {/* Image - fixed equal size */}
-                <Box
-                  sx={{
-                    width: "100%",
-                    height: 160,
-                    borderRadius: "6px",
-                    overflow: "hidden",
-                    background: "#fafafa",
-                    mb: 1.2,
-                  }}
-                >
-                  <Box
-                    component="img"
-                    src={`${BASE_URL}${d.images[0]}`}
-                    alt={d.name}
-                    sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </Box>
+      <Box sx={{ background: L.cream, minHeight: "100vh", fontFamily: '"Poppins", sans-serif' }}>
 
-                {/* Badges row */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    mb: 0.8,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      background: "#C0392B",
-                      color: "#fff",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      px: "7px",
-                      py: "2px",
-                      borderRadius: "3px",
-                      fontFamily: '"Poppins", sans-serif',
-                    }}
-                  >
-                    {d.discount}
-                  </Box>
-                  <Box
-                    sx={{
-                      background: "#f5f5f5",
-                      color: "#555",
-                      fontSize: 10,
-                      fontWeight: 600,
-                      px: "7px",
-                      py: "2px",
-                      borderRadius: "3px",
-                      fontFamily: '"Poppins", sans-serif',
-                    }}
-                  >
-                    Limited time deal
-                  </Box>
-                </Box>
+        {/* ── HERO BANNER ──────────────────────────── */}
+        <Box sx={{ position: "relative", height: { xs: "72vh", md: "85vh" }, overflow: "hidden" }}>
+          {banners.map((b, i) => (
+            <Box
+              key={i}
+              sx={{
+                position: "absolute", inset: 0,
+                backgroundImage: `url(${b.img})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                opacity: i === slide ? 1 : 0,
+                transition: "opacity 0.8s ease",
+              }}
+            />
+          ))}
 
-                {/* Product name */}
-                <Typography
-                  sx={{
-                    fontFamily: '"Poppins", sans-serif',
-                    fontWeight: 600,
-                    fontSize: 13,
-                    color: "#212121",
-                    lineHeight: 1.35,
-                    height: 36,
-                    overflow: "hidden",
-                    mb: 0.8,
-                  }}
-                >
-                  {d.name}
-                </Typography>
+          {/* overlay */}
+          <Box sx={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(120deg, rgba(26,10,18,0.82) 0%, rgba(194,24,91,0.22) 100%)",
+          }} />
 
-                {/* Prices */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: 0.8,
-                    mb: 0.4,
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: 16,
-                      fontWeight: 700,
-                      color: "#0F1111",
-                      fontFamily: '"Poppins", sans-serif',
-                    }}
-                  >
-                    ₹{d.discount_price ? d.discount_price : d?.price}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 12,
-                      color: "#888",
-                      textDecoration: "line-through",
-                      fontFamily: '"Poppins", sans-serif',
-                    }}
-                  >
-                    {d?.discount_price &&  "₹"+d?.price }
-                  </Typography>
-                </Box>
-
-                {/* Bought count */}
-                <Typography
-                  sx={{
-                    fontSize: 10,
-                    color: "#555",
-                    fontFamily: '"Poppins", sans-serif',
-                  }}
-                >
-                  {d.boughtCount} bought in past month
+          {/* content */}
+          <Box sx={{
+            position: "relative", zIndex: 2,
+            height: "100%", display: "flex", alignItems: "center",
+            px: { xs: 3, sm: 6, md: 10 },
+          }}>
+            <Box sx={{ maxWidth: 580 }}>
+              <Box sx={{
+                display: "inline-flex", alignItems: "center", gap: 1,
+                background: L.goldLight,
+                border: `1px solid rgba(201,168,76,0.45)`,
+                borderRadius: 999, px: 2, py: 0.6, mb: 2.5,
+              }}>
+                <Crown size={13} color={L.gold} />
+                <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.gold, letterSpacing: 1.2, textTransform: "uppercase" }}>
+                  {banners[slide].tag}
                 </Typography>
               </Box>
+
+              <Typography sx={{
+                fontFamily: '"Playfair Display", Georgia, serif',
+                fontWeight: 700, fontSize: { xs: 32, sm: 44, md: 54 },
+                color: "#fff", lineHeight: 1.18, mb: 2,
+                whiteSpace: "pre-line",
+              }}>
+                {banners[slide].title}
+              </Typography>
+
+              <Typography sx={{
+                color: "rgba(255,255,255,0.82)", fontSize: { xs: 13, md: 15 },
+                lineHeight: 1.75, mb: 4, maxWidth: 440,
+              }}>
+                {banners[slide].sub}
+              </Typography>
+
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                <Box
+                  component="button"
+                  onClick={() => navigate("/products")}
+                  sx={{
+                    background: L.rose, color: "#fff", border: "none",
+                    borderRadius: 2, px: { xs: 3, md: 4 }, py: 1.4,
+                    fontSize: 14, fontWeight: 700, fontFamily: '"Poppins", sans-serif',
+                    cursor: "pointer", letterSpacing: 0.5,
+                    boxShadow: `0 6px 24px rgba(194,24,91,0.4)`,
+                    transition: "transform 0.15s, box-shadow 0.15s",
+                    "&:hover": { transform: "translateY(-2px)", boxShadow: `0 10px 28px rgba(194,24,91,0.5)` },
+                  }}
+                >
+                  Shop Now
+                </Box>
+                <Box
+                  component="button"
+                  onClick={() => navigate("/categories")}
+                  sx={{
+                    background: "rgba(255,255,255,0.12)",
+                    backdropFilter: "blur(8px)",
+                    color: "#fff",
+                    border: "1px solid rgba(255,255,255,0.4)",
+                    borderRadius: 2, px: { xs: 3, md: 4 }, py: 1.4,
+                    fontSize: 14, fontWeight: 600, fontFamily: '"Poppins", sans-serif',
+                    cursor: "pointer",
+                    transition: "background 0.2s",
+                    "&:hover": { background: "rgba(255,255,255,0.2)" },
+                  }}
+                >
+                  View Collections
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* dots */}
+          <Box sx={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 1, zIndex: 3 }}>
+            {banners.map((_, i) => (
+              <Box
+                key={i}
+                component="button"
+                onClick={() => setSlide(i)}
+                sx={{
+                  width: i === slide ? 24 : 8, height: 8,
+                  borderRadius: 99, border: "none",
+                  background: i === slide ? L.rose : "rgba(255,255,255,0.45)",
+                  cursor: "pointer",
+                  transition: "width 0.3s, background 0.3s",
+                  padding: 0,
+                }}
+              />
             ))}
           </Box>
-        </Box>}
+        </Box>
 
-        {/* ── FEATURED PRODUCTS ────────────────── */}
-        {featuredProducts.length > 0 && <Box
-          sx={{
-            background: "#fff",
-            borderRadius: 2,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-            overflow: "hidden",
-          }}
-        >
-          <div style={styles.sectionHead}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Zap size={20} color={PINK[500]} />
-              <span style={styles.sectionTitle}>Featured Products</span>
-            </div>
-            <button
-              style={styles.viewAll}
-              onClick={() => navigate("/products")}
+        {/* ── TRUST BAR ────────────────────────────── */}
+        <Box sx={{
+          background: L.dark,
+          display: "flex", justifyContent: "center", flexWrap: "wrap",
+          gap: { xs: 2, md: 5 }, px: { xs: 2, md: 4 }, py: { xs: 2, md: 2.5 },
+        }}>
+          {[
+            { Icon: Truck, label: "Free Delivery", sub: "On orders above ₹499" },
+            { Icon: RefreshCw, label: "10-Day Returns", sub: "Easy return policy" },
+            { Icon: Shield, label: "100% Authentic", sub: "Handcrafted guarantee" },
+            { Icon: Package, label: "Secure Packaging", sub: "Safe delivery assured" },
+          ].map(({ Icon, label, sub }, i) => (
+            <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Icon size={20} color={L.gold} />
+              <Box>
+                <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{label}</Typography>
+                <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{sub}</Typography>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+
+
+        {/* ── CATEGORIES ───────────────────────────── */}
+        {categories.length > 0 && (
+          <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 4 } }}>
+            <Box sx={{ textAlign: "center", mb: 4 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.rose, letterSpacing: 2, textTransform: "uppercase", mb: 0.8 }}>
+                Browse By
+              </Typography>
+              <Typography sx={{ fontFamily: '"Playfair Display", serif', fontSize: { xs: 24, md: 30 }, fontWeight: 700, color: L.dark }}>
+                Collections
+              </Typography>
+            </Box>
+            <Box sx={{
+              display: "flex", gap: { xs: 1.5, md: 3 },
+              overflowX: "auto", pb: 1,
+              scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" },
+              px: { xs: 1, md: 2 },
+            }}>
+              {categories.map((cat) => (
+                <Box key={cat.id} onClick={() => navigate(`/products?category=${cat.id}`)}
+                  sx={{
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    gap: 1.5, cursor: "pointer", flexShrink: 0, minWidth: { xs: 96, md: 120 },
+                    "&:hover .cat-ring": { borderColor: L.rose },
+                    "&:hover .cat-label": { color: L.rose },
+                  }}
+                >
+                  <Box className="cat-ring" sx={{
+                    width: { xs: 88, md: 110 }, height: { xs: 88, md: 110 },
+                    borderRadius: "50%", overflow: "hidden",
+                    border: `2.5px solid ${L.gold}`, transition: "border-color 0.2s",
+                  }}>
+                    <Box component="img" src={cat.image || cat.image_url || "/hero/empty-category.jpg"} alt={cat.name}
+                      sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  </Box>
+                  <Typography className="cat-label" sx={{
+                    fontSize: { xs: 11, md: 13 }, fontWeight: 600, color: L.dark,
+                    textAlign: "center", transition: "color 0.2s",
+                    maxWidth: { xs: 96, md: 120 },
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>
+                    {cat.name}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {/* ── LUXURY COLLECTIONS (featured) ────────── */}
+        {featuredProducts.length > 0 && (
+          <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 4 }, background: L.warm }}>
+            <Box sx={{ maxWidth: 1280, mx: "auto" }}>
+              <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", mb: 4 }}>
+                <Box>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.rose, letterSpacing: 2, textTransform: "uppercase", mb: 0.8 }}>
+                    Editor's Pick
+                  </Typography>
+                  <Typography sx={{ fontFamily: '"Playfair Display", serif', fontSize: { xs: 24, md: 30 }, fontWeight: 700, color: L.dark }}>
+                    Luxury Collections
+                  </Typography>
+                </Box>
+                <Box
+                  component="button"
+                  onClick={() => navigate("/products")}
+                  sx={{
+                    background: "none", border: `1.5px solid ${L.rose}`, color: L.rose,
+                    borderRadius: 2, px: 2.5, py: 1,
+                    fontSize: 12, fontWeight: 700, fontFamily: '"Poppins", sans-serif',
+                    cursor: "pointer", whiteSpace: "nowrap",
+                    "&:hover": { background: L.rose, color: "#fff" },
+                    transition: "all 0.2s",
+                  }}
+                >
+                  See All
+                </Box>
+              </Box>
+
+              <Grid container spacing={{ xs: 1.5, md: 2.5 }}>
+                {featuredProducts.map((p, i) => (
+                  <Grid item xs={6} sm={4} md={3} key={i}>
+                    <ProductCard product={p} onClick={() => navigate(`/products/${p.id}`)} />
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          </Box>
+        )}
+
+        {/* ── PROMO SPLIT BANNER ───────────────────── */}
+        <Box sx={{
+          display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          minHeight: { xs: "auto", md: 300 },
+        }}>
+          {[
+            {
+              img: "/hero/r-1.jpg",
+              tag: "Bestseller",
+              title: "Handcrafted Jewellery",
+              sub: "Each piece is unique, made with love",
+              path: "/products?category=6a27eddca127208865d2c2aa",
+            },
+            {
+              img: "/hero/r-4.jpg",
+              tag: "New In",
+              title: "Home Décor Art",
+              sub: "Elevate every corner of your space",
+              path: "/products?category=6a27ed97a127208865d2c2a2",
+            },
+          ].map((b, i) => (
+            <Box
+              key={i}
+              onClick={() => navigate(b.path)}
+              sx={{
+                position: "relative", height: { xs: 200, md: 300 },
+                overflow: "hidden", cursor: "pointer",
+                "&:hover img": { transform: "scale(1.06)" },
+              }}
             >
-              VIEW ALL
-            </button>
-          </div>
+              <Box
+                component="img"
+                src={b.img}
+                sx={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", display: "block" }}
+              />
+              <Box sx={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(0deg, rgba(26,10,18,0.75) 0%, rgba(26,10,18,0.1) 60%)",
+                display: "flex", flexDirection: "column", justifyContent: "flex-end",
+                p: { xs: 2.5, md: 3.5 },
+              }}>
+                <Chip label={b.tag} size="small" sx={{ background: L.rose, color: "#fff", fontWeight: 700, fontSize: 10, width: "fit-content", mb: 1 }} />
+                <Typography sx={{ fontFamily: '"Playfair Display", serif', fontSize: { xs: 20, md: 24 }, fontWeight: 700, color: "#fff" }}>
+                  {b.title}
+                </Typography>
+                <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.75)", mt: 0.5 }}>{b.sub}</Typography>
+                <Box sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: L.gold }}>Explore →</Typography>
+                </Box>
+              </Box>
+            </Box>
+          ))}
+        </Box>
 
-          <Box
-            sx={{
-              display: "flex",
-              overflowX: "auto",
-              scrollbarWidth: "none",
-              "&::-webkit-scrollbar": { display: "none" },
-            }}
-          >
-            {featuredProducts.length > 0 && featuredProducts
-              .map((product: any, i: number) => {
-                // ✅ FIX: Proper image handling
-                const BASE_URL = import.meta.env.VITE_APP_BASE_URL || "";
-                const imageSrc = `${BASE_URL}${product.images[0]}`;
-                return (
-                  <Box
-                    key={i}
-                    onClick={() =>
-                      navigate(
-                        product?.id ? `/products/${product.id}` : "/products",
-                      )
-                    }
-                    sx={{
-                      minWidth: 190,
-                      maxWidth: 190,
-                      flexShrink: 0,
-                      padding: "12px 10px 14px",
-                      borderRight:
-                        i <
-                          (featuredProducts.length || FALLBACK_PRODUCTS.length) - 1
-                          ? "1px solid #f5f5f5"
-                          : "none",
-                      cursor: "pointer",
-                      position: "relative",
-                      transition: "box-shadow 0.2s",
-                      "&:hover": { boxShadow: `inset 0 -3px 0 ${PINK[400]}` },
-                    }}
-                  >
-                    {/* Badge */}
-                    {product?.badge && (
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: 16,
-                          left: 10,
-                          zIndex: 2,
-                          background:
-                            product.badge === "New" ? PINK[500] : "#C0392B",
-                          color: "#fff",
-                          fontSize: 9,
-                          fontWeight: 700,
-                          px: "6px",
-                          py: "2px",
-                          borderRadius: "3px",
-                        }}
-                      >
-                        {product.badge}
-                      </Box>
-                    )}
+        {/* ── POPULAR PRODUCTS (all/deals) ─────────── */}
+        {deals.length > 0 && (
+          <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 4 } }}>
+            <Box sx={{ maxWidth: 1280, mx: "auto" }}>
+              <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", mb: 4 }}>
+                <Box>
+                  <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.rose, letterSpacing: 2, textTransform: "uppercase", mb: 0.8 }}>
+                    All Products
+                  </Typography>
+                  <Typography sx={{ fontFamily: '"Playfair Display", serif', fontSize: { xs: 24, md: 30 }, fontWeight: 700, color: L.dark }}>
+                    Popular Collections
+                  </Typography>
+                </Box>
+                <Box
+                  component="button"
+                  onClick={() => navigate("/products")}
+                  sx={{
+                    background: L.dark, color: "#fff", border: "none",
+                    borderRadius: 2, px: 2.5, py: 1,
+                    fontSize: 12, fontWeight: 700, fontFamily: '"Poppins", sans-serif',
+                    cursor: "pointer", whiteSpace: "nowrap",
+                  }}
+                >
+                  View All
+                </Box>
+              </Box>
 
-                    {/* Wishlist */}
-                    <Box
-                      onClick={(e) => e.stopPropagation()}
-                      sx={{
-                        position: "absolute",
-                        top: 16,
-                        right: 10,
-                        zIndex: 2,
-                        background: "rgba(255,255,255,0.9)",
-                        borderRadius: "50%",
-                        width: 28,
-                        height: 28,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                        cursor: "pointer",
-                        fontSize: 15,
-                        color: PINK[400],
-                        "&:hover": { color: PINK[600] },
-                      }}
-                    >
-                      ♡
-                    </Box>
+              <Box sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(4, 1fr)" },
+                gap: { xs: 2, md: 2.5 },
+              }}>
+                {deals.slice(0, 4).map((p, i) => (
+                  <ProductCard key={i} product={p} onClick={() => navigate(`/products/${p.id}`)} />
+                ))}
+              </Box>
+            </Box>
+          </Box>
+        )}
 
-                    {/* ✅ Image FIXED */}
-                    <Box
-                      sx={{
-                        width: "100%",
-                        height: 170,
-                        borderRadius: "6px",
-                        overflow: "hidden",
-                        background: "#fafafa",
-                        mb: 1.2,
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src={imageSrc}
-                        alt={product?.name || "product"}
-                        onError={(e: any) => {
-                          // e.target.src = "https://via.placeholder.com/200"; // fallback if broken
-                        }}
-                        sx={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    </Box>
-
-                    {/* बाकी same */}
-                    <Typography sx={{ fontSize: 9, color: "#888", mb: 0.4 }}>
-                      {product?.is_sponsored ? "Sponsored" : ""}
-                    </Typography>
-
-                    <Typography
-                      sx={{
-                        fontWeight: 600,
-                        fontSize: 13,
-                        color: "#0F1111",
-                        height: 36,
-                        overflow: "hidden",
-                        mb: 0.8,
-                      }}
-                    >
-                      {product?.name}
-                    </Typography>
-
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        mb: 0.8,
-                      }}
-                    >
-                      <Box sx={{ color: PINK[500], fontSize: 12 }}>
-                        {"★".repeat(Math.round(product?.rating || 4))}
-                        {"☆".repeat(5 - Math.round(product?.rating || 4))}
-                      </Box>
-                      <Typography sx={{ fontSize: 11 }}>
-                        {product?.rating || "4.2"}
-                      </Typography>
-                      <Typography sx={{ fontSize: 10 }}>
-                        ({product?.review_count || "0"})
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ display: "flex", gap: 0.8, mb: 0.4 }}>
-                      <Typography sx={{ fontSize: 16, fontWeight: 700 }}>
-                        ₹{product?.price || product?.sale_price}
-                      </Typography>
-
-                      {product?.original_price && (
-                        <Typography
-                          sx={{ fontSize: 11, textDecoration: "line-through" }}
-                        >
-                          ₹{product.original_price}
-                        </Typography>
-                      )}
-                    </Box>
-
-                    <Typography sx={{ fontSize: 10 }}>
-                      FREE Delivery <strong>Tomorrow</strong>
+        {/* ── BEST DEALS ───────────────────────────── */}
+        {bestDeals.length > 0 && (
+          <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 4 }, background: L.dark }}>
+            <Box sx={{ maxWidth: 1280, mx: "auto" }}>
+              {/* heading */}
+              <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", mb: 4 }}>
+                <Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.8 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: "50%", background: L.gold, animation: "pulse 1.5s infinite" }} />
+                    <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.gold, letterSpacing: 2, textTransform: "uppercase" }}>
+                      Limited Time
                     </Typography>
                   </Box>
-                );
-              })}
-          </Box>
-        </Box>}
+                  <Typography sx={{ fontFamily: '"Playfair Display", serif', fontSize: { xs: 24, md: 30 }, fontWeight: 700, color: "#fff" }}>
+                    Best Deals
+                  </Typography>
+                </Box>
+                <Box
+                  component="button"
+                  onClick={() => navigate("/products")}
+                  sx={{
+                    background: L.rose, color: "#fff", border: "none",
+                    borderRadius: 2, px: 2.5, py: 1,
+                    fontSize: 12, fontWeight: 700, fontFamily: '"Poppins", sans-serif',
+                    cursor: "pointer", whiteSpace: "nowrap",
+                  }}
+                >
+                  View All
+                </Box>
+              </Box>
 
-        {/* ── TESTIMONIALS ─────────────────────── */}
-        <Box
-          sx={{
-            background: "#fff",
-            borderRadius: 2,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
-            overflow: "hidden",
-          }}
-        >
-          <div style={styles.sectionHead}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Star size={20} color={PINK[500]} fill={PINK[500]} />
-              <span style={styles.sectionTitle}>Customer Reviews</span>
-            </div>
-          </div>
-          <Grid container spacing={2} sx={{ p: 2 }}>
-            {reviews.length === 0 ? (
-              <Grid item xs={12}>
-                <Typography sx={{ color: "text.secondary", textAlign: "center", py: 3, fontSize: 14 }}>
-                  No reviews yet. Be the first to review!
-                </Typography>
-              </Grid>
-            ) : (
-              reviews.map((r) => (
-                <Grid item xs={12} md={4} key={r._id}>
-                  <Box
-                    sx={{
-                      border: `1px solid ${PINK[100]}`,
-                      borderRadius: 2,
-                      p: 2.5,
-                      "&:hover": {
-                        borderColor: PINK[300],
-                        boxShadow: `0 4px 16px ${PINK[100]}`,
-                      },
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}>
-                      <Avatar
-                        sx={{
-                          width: 48,
-                          height: 48,
-                          border: `2px solid ${PINK[300]}`,
-                          background: PINK[500],
-                          fontFamily: '"Poppins", sans-serif',
-                          fontWeight: 700,
-                          fontSize: 18,
-                        }}
-                      >
-                        {r.Customername?.[0]?.toUpperCase() ?? "?"}
-                      </Avatar>
-                      <Box>
-                        <Typography sx={{ fontFamily: '"Poppins", sans-serif', fontWeight: 700, fontSize: 14 }}>
-                          {r.Customername}
+              {/* horizontal scroll row */}
+              <Box sx={{
+                display: "flex",
+                gap: 2,
+                overflowX: "auto",
+                pb: 1,
+                scrollbarWidth: "none",
+                "&::-webkit-scrollbar": { display: "none" },
+              }}>
+                {bestDeals.map((p, i) => {
+                  const discountPct = p.discount_price
+                    ? Math.round(((p.price - p.discount_price) / p.price) * 100)
+                    : 0;
+                  return (
+                    <Box
+                      key={i}
+                      onClick={() => navigate(`/products/${p.id}`)}
+                      sx={{
+                        minWidth: { xs: 160, md: 200 },
+                        maxWidth: { xs: 160, md: 200 },
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: 3,
+                        overflow: "hidden",
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        transition: "transform 0.2s, border-color 0.2s",
+                        "&:hover": { transform: "translateY(-4px)", borderColor: L.gold },
+                      }}
+                    >
+                      {/* image */}
+                      <Box sx={{ position: "relative", aspectRatio: "1/1", overflow: "hidden" }}>
+                        <Box
+                          component="img"
+                          src={`${BASE_URL}${p.images?.[0]}`}
+                          alt={p.name}
+                          sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        />
+                        {/* discount badge */}
+                        <Box sx={{
+                          position: "absolute", top: 8, left: 8,
+                          background: L.rose, color: "#fff",
+                          fontSize: 11, fontWeight: 800,
+                          px: 1, py: 0.3, borderRadius: 1,
+                        }}>
+                          -{discountPct}%
+                        </Box>
+                      </Box>
+
+                      {/* info */}
+                      <Box sx={{ p: 1.5 }}>
+                        <Typography sx={{
+                          fontSize: 12, fontWeight: 600, color: "#fff",
+                          lineHeight: 1.35, mb: 1,
+                          display: "-webkit-box", WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical", overflow: "hidden",
+                        }}>
+                          {p.name}
                         </Typography>
-                        <Box sx={{ display: "flex", gap: 0.3 }}>
-                          {Array.from({ length: r.ratings }).map((_, j) => (
-                            <Star key={j} size={13} fill="#FFD700" color="#FFD700" />
-                          ))}
+                        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                          <Typography sx={{ fontSize: 15, fontWeight: 800, color: L.gold }}>
+                            ₹{p.discount_price}
+                          </Typography>
+                          <Typography sx={{ fontSize: 11, color: "rgba(255,255,255,0.4)", textDecoration: "line-through" }}>
+                            ₹{p.price}
+                          </Typography>
                         </Box>
                       </Box>
                     </Box>
-                    <Typography
-                      sx={{
-                        fontFamily: '"Poppins", sans-serif',
-                        fontSize: 13,
-                        color: "#333333",
-                        fontStyle: "italic",
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      "{r.description || "Great product!"}"
-                    </Typography>
-                  </Box>
-                </Grid>
-              ))
+                  );
+                })}
+              </Box>
+            </Box>
+          </Box>
+        )}
+
+        {/* ── BRAND STRIP ──────────────────────────── */}
+        <Box sx={{
+          background: `linear-gradient(135deg, ${L.dark} 0%, #3D1020 100%)`,
+          py: { xs: 5, md: 7 }, px: { xs: 3, md: 6 },
+          textAlign: "center",
+        }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}>
+            <Sparkles size={16} color={L.gold} />
+            <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.gold, letterSpacing: 2, textTransform: "uppercase" }}>
+              Our Promise
+            </Typography>
+            <Sparkles size={16} color={L.gold} />
+          </Box>
+          <Typography sx={{
+            fontFamily: '"Playfair Display", serif',
+            fontSize: { xs: 22, md: 32 }, fontWeight: 700, color: "#fff",
+            maxWidth: 600, mx: "auto", lineHeight: 1.4, mb: 3,
+          }}>
+            Every piece tells a story of art & soul
+          </Typography>
+          <Box
+            component="button"
+            onClick={() => navigate("/products")}
+            sx={{
+              background: L.rose, color: "#fff", border: "none",
+              borderRadius: 2, px: 4, py: 1.5,
+              fontSize: 14, fontWeight: 700, fontFamily: '"Poppins", sans-serif',
+              cursor: "pointer",
+              boxShadow: `0 6px 24px rgba(194,24,91,0.4)`,
+            }}
+          >
+            Explore Full Collection
+          </Box>
+        </Box>
+
+        {/* ── CUSTOMER REVIEWS ─────────────────────── */}
+        <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 4 }, background: L.warm }}>
+          <Box sx={{ maxWidth: 1280, mx: "auto" }}>
+            <Box sx={{ textAlign: "center", mb: 4 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.rose, letterSpacing: 2, textTransform: "uppercase", mb: 0.8 }}>
+                Happy Customers
+              </Typography>
+              <Typography sx={{ fontFamily: '"Playfair Display", serif', fontSize: { xs: 24, md: 30 }, fontWeight: 700, color: L.dark }}>
+                What They Say
+              </Typography>
+            </Box>
+
+            {reviews.length === 0 ? (
+              <Typography sx={{ textAlign: "center", color: L.muted, py: 4 }}>
+                No reviews yet. Be the first to review!
+              </Typography>
+            ) : (
+              <Grid container spacing={{ xs: 1.5, md: 2.5 }}>
+                {reviews.map((r) => (
+                  <Grid item xs={12} sm={6} md={4} key={r._id}>
+                    <Box sx={{
+                      background: L.white, borderRadius: 3, p: 3,
+                      boxShadow: "0 2px 16px rgba(26,10,18,0.07)",
+                      height: "100%",
+                      "&:hover": { boxShadow: "0 6px 24px rgba(26,10,18,0.13)" },
+                      transition: "box-shadow 0.2s",
+                    }}>
+                      {/* stars */}
+                      <Box sx={{ display: "flex", gap: 0.3, mb: 1.5 }}>
+                        {Array.from({ length: r.ratings }).map((_, j) => (
+                          <Star key={j} size={14} fill="#FFD700" color="#FFD700" />
+                        ))}
+                      </Box>
+                      <Typography sx={{ fontSize: 13, color: "#333", fontStyle: "italic", lineHeight: 1.65, mb: 2 }}>
+                        "{r.description || "Great product!"}"
+                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Avatar sx={{ width: 38, height: 38, background: L.rose, fontSize: 14, fontWeight: 700 }}>
+                          {r.Customername?.[0]?.toUpperCase() ?? "?"}
+                        </Avatar>
+                        <Typography sx={{ fontWeight: 700, fontSize: 13, color: L.dark }}>
+                          {r.Customername}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
             )}
-          </Grid>
+          </Box>
+        </Box>
+
+      </Box>
+    </>
+  );
+};
+
+/* ─── PRODUCT CARD ───────────────────────────────── */
+const ProductCard = ({ product, onClick }: { product: Product; onClick: () => void }) => {
+  const [wishlisted, setWishlisted] = useState(false);
+  const imgSrc = `${BASE_URL}${product.images?.[0] ?? ""}`;
+
+  const discountPct = product.discount_price
+    ? Math.round(((product.price - product.discount_price) / product.price) * 100)
+    : null;
+
+  return (
+    <Box
+      onClick={onClick}
+      sx={{
+        background: "#fff", borderRadius: 3, overflow: "hidden",
+        cursor: "pointer", position: "relative",
+        boxShadow: "0 2px 12px rgba(26,10,18,0.07)",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 8px 28px rgba(26,10,18,0.14)",
+        },
+      }}
+    >
+      {/* image */}
+      <Box sx={{ position: "relative", aspectRatio: "1 / 1", overflow: "hidden" }}>
+        <Box
+          component="img"
+          src={imgSrc}
+          alt={product.name}
+          sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.4s", ".MuiBox-root:hover &": { transform: "scale(1.06)" } }}
+        />
+
+        {/* discount badge */}
+        {discountPct && (
+          <Box sx={{
+            position: "absolute", top: 10, left: 10,
+            background: L.rose, color: "#fff",
+            fontSize: 10, fontWeight: 700,
+            px: 1, py: 0.3, borderRadius: 1,
+          }}>
+            {discountPct}% OFF
+          </Box>
+        )}
+
+        {/* wishlist */}
+        <Box
+          component="button"
+          onClick={(e: React.MouseEvent) => { e.stopPropagation(); setWishlisted((w) => !w); }}
+          sx={{
+            position: "absolute", top: 8, right: 8,
+            background: "#fff", border: "none",
+            borderRadius: "50%", width: 30, height: 30,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+            color: wishlisted ? L.rose : "#aaa",
+            "&:hover": { color: L.rose },
+          }}
+        >
+          <Heart size={14} fill={wishlisted ? L.rose : "none"} />
         </Box>
       </Box>
 
-      {/* ── TRUST BAR ────────────────────────────── */}
-      {/* <div style={styles.trustBar}>
-        {[
-          {
-            icon: <Truck size={22} color={PINK[500]} />,
-            label: "Free Delivery",
-            sub: "On orders above ₹499",
-          },
-          {
-            icon: <RefreshCw size={22} color={PINK[500]} />,
-            label: "10-Day Returns",
-            sub: "Easy return policy",
-          },
-          {
-            icon: <Shield size={22} color={PINK[500]} />,
-            label: "100% Authentic",
-            sub: "Handcrafted guarantee",
-          },
-          {
-            icon: <Package size={22} color={PINK[500]} />,
-            label: "Secure Packaging",
-            sub: "Safe delivery assured",
-          },
-        ].map((item, i) => (
-          <div key={i} style={styles.trustItem}>
-            {item.icon}
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 13 }}>{item.label}</div>
-              <div style={{ fontWeight: 400, fontSize: 11, color: "#888" }}>
-                {item.sub}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div> */}
-
-      {/* ── FOOTER ───────────────────────────────── */}
-      {/* <div style={styles.footer}>
-        <Box
-          sx={{
-            maxWidth: 1280,
-            mx: "auto",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 4,
-            mb: 4,
-          }}
-        >
-          {[
-            {
-              heading: "ABOUT",
-              links: ["About Us", "Careers", "Press", "Corporate Info"],
-            },
-            {
-              heading: "HELP",
-              links: ["Payments", "Shipping", "Cancellation & Returns", "FAQ"],
-            },
-            {
-              heading: "POLICY",
-              links: ["Return Policy", "Terms of Use", "Privacy", "Sitemap"],
-            },
-            {
-              heading: "SOCIAL",
-              links: ["Facebook", "Instagram", "Pinterest", "YouTube"],
-            },
-          ].map((col, i) => (
-            <Box key={i} sx={{ flex: "1 1 160px" }}>
-              <Typography
-                sx={{
-                  fontFamily: '"Poppins", sans-serif',
-                  fontWeight: 700,
-                  fontSize: 12,
-                  color: "rgba(255,255,255,0.5)",
-                  mb: 1.5,
-                  letterSpacing: 1,
-                }}
-              >
-                {col.heading}
-              </Typography>
-              {col.links.map((l) => (
-                <Typography
-                  key={l}
-                  sx={{
-                    fontFamily: '"Poppins", sans-serif',
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.75)",
-                    mb: 0.75,
-                    cursor: "pointer",
-                    "&:hover": { color: PINK[300] },
-                    transition: "color 0.2s",
-                  }}
-                >
-                  {l}
-                </Typography>
-              ))}
-            </Box>
-          ))}
-          <Box sx={{ flex: "1 1 200px" }}>
-            <Typography
-              sx={{
-                fontFamily: '"Poppins", sans-serif',
-                fontWeight: 700,
-                fontSize: 12,
-                color: "rgba(255,255,255,0.5)",
-                mb: 1.5,
-                letterSpacing: 1,
-              }}
-            >
-              GET THE APP
+      {/* info */}
+      <Box sx={{ p: { xs: 1.2, md: 1.8 } }}>
+        {/* rating */}
+        {product.rating > 0 && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.6 }}>
+            <Star size={11} fill="#FFD700" color="#FFD700" />
+            <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.dark }}>
+              {product.rating.toFixed(1)}
             </Typography>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-              {["App Store", "Google Play"].map((s) => (
-                <Box
-                  key={s}
-                  sx={{
-                    border: "1px solid rgba(255,255,255,0.25)",
-                    borderRadius: 1,
-                    px: 1.5,
-                    py: 0.75,
-                    fontFamily: '"Poppins", sans-serif',
-                    fontSize: 12,
-                    color: "#fff",
-                    cursor: "pointer",
-                    "&:hover": { borderColor: PINK[300] },
-                    transition: "border-color 0.2s",
-                  }}
-                >
-                  {s}
-                </Box>
-              ))}
-            </Box>
+            {product.totalReviews != null && (
+              <Typography sx={{ fontSize: 10, color: L.muted }}>({product.totalReviews})</Typography>
+            )}
           </Box>
-        </Box>
-        <Box
-          sx={{
-            borderTop: "1px solid rgba(255,255,255,0.1)",
-            pt: 2,
-            textAlign: "center",
-          }}
-        >
-          <Typography
-            sx={{
-              fontFamily: '"Poppins", sans-serif',
-              fontSize: 12,
-              color: "rgba(255,255,255,0.4)",
-            }}
-          >
-            © 2025 ResinArt. All rights reserved. Made with ♥ in India.
+        )}
+
+        <Typography sx={{
+          fontSize: { xs: 12, md: 13 }, fontWeight: 600, color: L.dark,
+          lineHeight: 1.35,
+          display: "-webkit-box", WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical", overflow: "hidden",
+          mb: 0.8,
+        }}>
+          {product.name}
+        </Typography>
+
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.8 }}>
+          <Typography sx={{ fontSize: { xs: 14, md: 16 }, fontWeight: 800, color: L.dark }}>
+            ₹{product.discount_price ?? product.price}
           </Typography>
+          {product.discount_price && (
+            <Typography sx={{ fontSize: 11, color: L.muted, textDecoration: "line-through" }}>
+              ₹{product.price}
+            </Typography>
+          )}
         </Box>
-      </div> */}
+      </Box>
     </Box>
   );
 };

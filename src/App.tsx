@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import { SnackbarProvider } from "notistack";
@@ -39,6 +40,7 @@ import { AboutUs } from "./pages/AboutUs.tsx";
 import { RefundPolicy } from "./pages/RefundPolicy";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy.tsx";
 import { TermsAndConditions } from "./pages/TermsCondition.tsx";
+import { ShopCategories } from "./pages/ShopCategories";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -79,6 +81,7 @@ function App() {
   };
 
   return (
+    <HelmetProvider>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: "bottom", horizontal: "right" }} autoHideDuration={3000}>
@@ -216,6 +219,7 @@ function App() {
                     <TermsAndConditions />
                 }
               />
+              <Route path="/categories" element={<ShopCategories />} />
               <Route path="/refund-policy" element={<RefundPolicy />} />
               <Route path="/contact" element={<ContactPage />} /> <Route path="/about-us" element={<AboutUs />} />
             </Routes>
@@ -223,6 +227,7 @@ function App() {
         </BrowserRouter>
       </SnackbarProvider>
     </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

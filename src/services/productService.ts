@@ -1,24 +1,37 @@
 import { api } from './authService';
-import { getImageUrl } from '../lib/imageUrl';
+import { getImageUrl, getVideoUrl } from '../lib/imageUrl';
 import { ProductItem, ProductType, Product, Category } from '../types';
 
-const normalize = (raw: Record<string, any>): ProductItem => ({
-  id: raw._id ?? raw.id ?? '',
-  image: getImageUrl(raw.image),
-  title: raw.title ?? raw.name ?? '',
-  description: raw.description ?? '',
-  price: Number(raw.price) || 0,
-  discountpercent: Number(raw.discountpercent) || 0,
-  offerprice: Number(raw.offerprice) || Number(raw.price) || 0,
-  product_type: (raw.product_type as ProductType) ?? ProductType.REGULAR,
-  category_id: raw.category_id ?? raw.category?._id ?? raw.category?.id ?? '',
-  is_active: raw.is_active ?? true,
-  is_deleted: raw.is_deleted ?? false,
-  avgRating: Number(raw.avgRating) || 0,
-  totalReviews: Number(raw.totalReviews) || 0,
-  createdAt: raw.createdAt ?? raw.created_at ?? '',
-  updatedAt: raw.updatedAt ?? raw.updated_at ?? '',
-});
+const normalize = (raw: Record<string, any>): ProductItem => {
+  // Build images array: prefer raw.images[], fall back to raw.image
+  const rawImages: string[] = Array.isArray(raw.images) && raw.images.length
+    ? raw.images
+    : (raw.image ? [raw.image] : []);
+
+  return {
+    id: raw._id ?? raw.id ?? '',
+    image: getImageUrl(rawImages[0] ?? raw.image),
+    images: rawImages.map((img) => getImageUrl(img)),
+    imagePublicIds: rawImages,               // keep raw public_ids for the edit form
+    video: raw.video ? getVideoUrl(raw.video) : undefined,
+    videoPublicId: raw.video || undefined,   // raw public_id for the edit form
+    title: raw.title ?? raw.name ?? '',
+    description: raw.description ?? '',
+    price: Number(raw.price) || 0,
+    discountpercent: Number(raw.discountpercent) || 0,
+    offerprice: Number(raw.offerprice) || Number(raw.price) || 0,
+    product_type: (raw.product_type as ProductType) ?? ProductType.REGULAR,
+    category_id: raw.category_id ?? raw.category?._id ?? raw.category?.id ?? '',
+    parent_product_id: raw.parent_product_id ?? undefined,
+    size: raw.size || undefined,
+    is_active: raw.is_active ?? true,
+    is_deleted: raw.is_deleted ?? false,
+    avgRating: Number(raw.avgRating) || 0,
+    totalReviews: Number(raw.totalReviews) || 0,
+    createdAt: raw.createdAt ?? raw.created_at ?? '',
+    updatedAt: raw.updatedAt ?? raw.updated_at ?? '',
+  };
+};
 
 const toLegacyProduct = (item: ProductItem): Product => ({
   id: item.id,
@@ -27,13 +40,15 @@ const toLegacyProduct = (item: ProductItem): Product => ({
   price: item.price,
   discount_price: item.discountpercent > 0 ? item.offerprice : undefined,
   category_id: item.category_id ?? '',
-  images: item.image ? [item.image] : [],
+  images: item.images.length ? item.images : (item.image ? [item.image] : []),
   stock: 0,
   is_featured: item.product_type === ProductType.FEATURED,
   rating: item.avgRating ?? 0,
   totalReviews: item.totalReviews ?? 0,
   created_at: item.createdAt ?? '',
   updated_at: item.updatedAt ?? '',
+  size: item.size,
+  parent_product_id: item.parent_product_id,
 });
 
 const multipart = { 'Content-Type': 'multipart/form-data' };
@@ -70,7 +85,6 @@ export const productService = {
     only_discount?: boolean;
     sort?: string;
   }): Promise<ProductsPage> {
-    // Send array of category ids as comma-separated string
     const queryParams: Record<string, any> = { ...params };
     if (Array.isArray(params.category_id)) {
       queryParams.category_id = params.category_id.join(',');
@@ -125,9 +139,9 @@ export const productService = {
     return items.map(toLegacyProduct);
   },
 
-  async getProductById(id: string): Promise<Product | null> {
+  async getProductById(id: string): Promise<ProductItem | null> {
     try {
-      return toLegacyProduct(await this.getById(id));
+      return await this.getById(id);
     } catch {
       return null;
     }
@@ -136,5 +150,16 @@ export const productService = {
   async getCategories(): Promise<Category[]> {
     const { categoryService } = await import('./categoryService');
     return (await categoryService.getAll()) as unknown as Category[];
+  },
+
+  async createWithSizes(formData: FormData): Promise<ProductItem[]> {
+    const { data } = await api.post('/products/create-with-sizes', formData, { headers: multipart });
+    const items = data?.data;
+    return Array.isArray(items) ? items.map(normalize) : [normalize(items)];
+  },
+
+  async getSizeVariants(id: string): Promise<Array<{ id: string; size: string; price: number; discountpercent: number; offerprice: number }>> {
+    const { data } = await api.get(`/products/${id}/sizes`);
+    return data?.data ?? [];
   },
 };

@@ -3,10 +3,6 @@ import {
   Box,
   Typography,
   Button,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
   Chip,
   Dialog,
   DialogContent,
@@ -172,6 +168,9 @@ export const Categories = () => {
       {/* Page Header */}
       <Box
         sx={{
+          position: 'sticky',
+          top: 64,
+          zIndex: 100,
           background: `linear-gradient(135deg, ${PINK[600]} 0%, ${PINK[500]} 100%)`,
           py: { xs: 3, sm: 4 },
           px: { xs: 2, sm: 4 },
@@ -196,14 +195,7 @@ export const Categories = () => {
           >
             <Tag size={24} color="#fff" />
           </Box>
-          <Box>
-            <Typography variant="h5" fontWeight={800} color="#fff" lineHeight={1.2}>
-              Category Management
-            </Typography>
-            <Typography fontSize={13} color="rgba(255,255,255,0.8)" mt={0.3}>
-              {categories.length} {categories.length === 1 ? 'category' : 'categories'} total
-            </Typography>
-          </Box>
+
         </Box>
 
         <Button
@@ -278,132 +270,163 @@ export const Categories = () => {
             </Button>
           </Box>
         ) : (
-          /* Category Grid */
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+          /* Category Grid — circle style */
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(3, 1fr)',
+                sm: 'repeat(4, 1fr)',
+                md: 'repeat(5, 1fr)',
+                lg: 'repeat(6, 1fr)',
+              },
+              gap: { xs: 2, sm: 3 },
+            }}
+          >
             {categories.map((cat) => (
               <Box
                 key={cat.id}
                 sx={{
-                  flex: '1 1 240px',
-                  maxWidth: {
-                    xs: '100%',
-                    sm: 'calc(50% - 12px)',
-                    md: 'calc(33.33% - 16px)',
-                    lg: 'calc(25% - 18px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 1,
+                  '&:hover .cat-circle': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 32px rgba(194,24,91,0.22)',
                   },
-                  minWidth: 220,
+                  '&:hover .cat-actions': { opacity: 1 },
+                  '&:hover .cat-img': { transform: 'scale(1.08)' },
                 }}
               >
-                <Card
-                  elevation={0}
+                {/* Circle */}
+                <Box
+                  className="cat-circle"
                   sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 3,
+                    position: 'relative',
+                    width: { xs: 80, sm: 100, md: 110 },
+                    height: { xs: 80, sm: 100, md: 110 },
+                    borderRadius: '50%',
                     overflow: 'hidden',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: '0 12px 28px rgba(194,24,91,0.14)',
-                    },
+                    border: `3px solid ${cat.is_active ? PINK[500] : '#e0e0e0'}`,
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.10)',
+                    transition: 'transform 0.25s, box-shadow 0.25s, border-color 0.25s',
+                    flexShrink: 0,
                   }}
                 >
                   {cat.image ? (
-                    <CardMedia
+                    <Box
                       component="img"
-                      height={160}
-                      image={cat.image}
+                      className="cat-img"
+                      src={cat.image}
                       alt={cat.name}
-                      sx={{ objectFit: 'cover' }}
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        transition: 'transform 0.4s ease',
+                      }}
                     />
                   ) : (
                     <Box
                       sx={{
-                        height: 160,
-                        bgcolor: 'action.hover',
+                        width: '100%',
+                        height: '100%',
+                        bgcolor: '#f5f5f5',
                         display: 'flex',
-                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: 1,
                       }}
                     >
-                      <ImageOff size={32} color="#bdbdbd" />
-                      <Typography fontSize={12} color="text.disabled">
-                        No image
-                      </Typography>
+                      <ImageOff size={28} color="#bdbdbd" />
                     </Box>
                   )}
 
-                  <CardContent sx={{ flex: 1, pb: 1 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        justifyContent: 'space-between',
-                        gap: 1,
-                        mb: 0.75,
-                      }}
-                    >
-                      <Typography fontWeight={700} fontSize={15} sx={{ flex: 1 }}>
-                        {cat.name}
-                      </Typography>
-                      <Tooltip title={`Click to ${cat.is_active ? 'deactivate' : 'activate'}`}>
-                        <Chip
-                          label={cat.is_active ? 'Active' : 'Inactive'}
-                          size="small"
-                          onClick={() => handleToggleActive(cat)}
-                          sx={{
-                            fontSize: 10,
-                            height: 22,
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                            bgcolor: cat.is_active ? 'rgba(76,175,80,0.12)' : 'rgba(0,0,0,0.06)',
-                            color: cat.is_active ? '#2e7d32' : 'text.disabled',
-                            border: '1px solid',
-                            borderColor: cat.is_active ? 'rgba(76,175,80,0.3)' : 'divider',
-                            '&:hover': { opacity: 0.8 },
-                          }}
-                        />
-                      </Tooltip>
-                    </Box>
-                    <Typography
-                      fontSize={13}
-                      color="text.secondary"
-                      sx={{
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        minHeight: 38,
-                      }}
-                    >
-                      {cat.description || 'No description provided'}
-                    </Typography>
-                  </CardContent>
+                  {/* Hover overlay with edit/delete */}
+                  <Box
+                    className="cat-actions"
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      bgcolor: 'rgba(0,0,0,0.45)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 0.5,
+                      opacity: 0,
+                      transition: 'opacity 0.2s',
+                    }}
+                  >
+                    <Tooltip title="Edit">
+                      <IconButton
+                        size="small"
+                        onClick={() => openEdit(cat)}
+                        sx={{
+                          width: 30,
+                          height: 30,
+                          bgcolor: PINK[500],
+                          color: '#fff',
+                          '&:hover': { bgcolor: PINK[600] },
+                        }}
+                      >
+                        <Pencil size={13} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        size="small"
+                        onClick={() => setDeleteTarget(cat)}
+                        sx={{
+                          width: 30,
+                          height: 30,
+                          bgcolor: '#d32f2f',
+                          color: '#fff',
+                          '&:hover': { bgcolor: '#b71c1c' },
+                        }}
+                      >
+                        <Trash2 size={13} />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
 
-                  <CardActions sx={{ px: 2, pb: 2, pt: 0, justifyContent: 'flex-end', gap: 0.5 }}>
-                    <IconButton
-                      size="small"
-                      onClick={() => openEdit(cat)}
-                      sx={{ color: PINK[500], '&:hover': { bgcolor: 'rgba(240,98,146,0.08)' } }}
-                      title="Edit"
-                    >
-                      <Pencil size={16} />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => setDeleteTarget(cat)}
-                      sx={{ color: 'error.main', '&:hover': { bgcolor: 'rgba(211,47,47,0.08)' } }}
-                      title="Delete"
-                    >
-                      <Trash2 size={16} />
-                    </IconButton>
-                  </CardActions>
-                </Card>
+                {/* Name */}
+                <Typography
+                  fontWeight={700}
+                  fontSize={13}
+                  textAlign="center"
+                  sx={{
+                    color: '#1a1a1a',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    lineHeight: 1.3,
+                    px: 0.5,
+                  }}
+                >
+                  {cat.name}
+                </Typography>
+
+                {/* Active toggle */}
+                <Tooltip title={`Click to ${cat.is_active ? 'deactivate' : 'activate'}`}>
+                  <Chip
+                    label={cat.is_active ? 'Active' : 'Inactive'}
+                    size="small"
+                    onClick={() => handleToggleActive(cat)}
+                    sx={{
+                      fontSize: 10,
+                      height: 20,
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      bgcolor: cat.is_active ? 'rgba(76,175,80,0.12)' : 'rgba(0,0,0,0.06)',
+                      color: cat.is_active ? '#2e7d32' : 'text.disabled',
+                      border: '1px solid',
+                      borderColor: cat.is_active ? 'rgba(76,175,80,0.3)' : 'divider',
+                      '&:hover': { opacity: 0.8 },
+                    }}
+                  />
+                </Tooltip>
               </Box>
             ))}
           </Box>

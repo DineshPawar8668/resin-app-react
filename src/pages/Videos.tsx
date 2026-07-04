@@ -1,4 +1,5 @@
 import { Box, Typography, Card, CardContent, CardMedia, CardActionArea, Chip } from '@mui/material';
+import { Helmet } from 'react-helmet-async';
 import { PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -65,6 +66,24 @@ export const Videos = () => {
   const navigate = useNavigate();
 
   return (
+    <>
+      <Helmet>
+        <title>Resin Art Making Videos – Watch Handmade Process | ShopIzara</title>
+        <meta name="description" content="Watch resin art making videos at ShopIzara. See how our handcrafted resin jewelry, coasters, frames and home decor products are made with creativity and passion in India." />
+        <meta name="keywords" content="resin art making videos, how to make resin art india, resin jewelry making, handmade resin process, resin art tutorial" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://shopizara.com/videos" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://shopizara.com/videos" />
+        <meta property="og:site_name" content="ShopIzara" />
+        <meta property="og:title" content="Resin Art Making Videos | ShopIzara" />
+        <meta property="og:description" content="Watch how handmade resin jewelry, coasters, frames and home decor are crafted at ShopIzara." />
+        <meta property="og:image" content="https://shopizara.com/hero/r-3.jpg" />
+        <meta property="og:locale" content="en_IN" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Resin Art Making Videos | ShopIzara" />
+        <meta name="twitter:image" content="https://shopizara.com/hero/r-3.jpg" />
+      </Helmet>
     <Box sx={{ minHeight: '100vh', background: '#fafafa', pb: 6 }}>
       {/* Header */}
       <Box
@@ -189,5 +208,6 @@ export const Videos = () => {
         ))}
       </Box>
     </Box>
+    </>
   );
 };

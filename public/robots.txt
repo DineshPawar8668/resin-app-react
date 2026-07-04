@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /admin/
+Disallow: /cart
+Disallow: /checkout
+Disallow: /wishlist
+Disallow: /profile
+Disallow: /change-password
+Disallow: /my-orders
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://shopizara.com/sitemap.xml
