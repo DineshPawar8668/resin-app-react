@@ -22,6 +22,7 @@ import { productReviewService, ProductReview } from "../services/productReviewSe
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { useSnackbar } from "notistack";
 import { setWishlistItems } from "../store/slices/wishlistSlice";
+import { addToCart as addToCartAction } from "../store/slices/cartSlice";
 import type { ProductItem } from "../types";
 
 const PINK = { main: "#C2185B", light: "#FCE4EC", dark: "#880E4F", 50: "#FFF0F6" };
@@ -101,7 +102,8 @@ export const ProductDetail = () => {
     if (!isAuthenticated || !user) { enqueueSnackbar("Please login to add items to cart", { variant: "warning" }); navigate("/login"); return; }
     try {
       setCartLoading(true);
-      await cartService.addToCart(user.id, id!, qty);
+      const item = await cartService.addToCart(user.id, id!, qty);
+      dispatch(addToCartAction(item));
       enqueueSnackbar("Added to cart!", { variant: "success" });
     } catch { enqueueSnackbar("Failed to add to cart", { variant: "error" }); }
     finally { setCartLoading(false); }
@@ -111,7 +113,8 @@ export const ProductDetail = () => {
     if (!isAuthenticated || !user) { enqueueSnackbar("Please login to continue", { variant: "warning" }); navigate("/login"); return; }
     try {
       setCartLoading(true);
-      await cartService.addToCart(user.id, id!, qty);
+      const item = await cartService.addToCart(user.id, id!, qty);
+      dispatch(addToCartAction(item));
       navigate("/cart");
     } catch { enqueueSnackbar("Failed to add to cart", { variant: "error" }); setCartLoading(false); }
   };

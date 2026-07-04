@@ -12,10 +12,11 @@ import { Heart, ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
 import { getImageUrl } from '../lib/imageUrl';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppSelector } from '../store/hooks';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { useSnackbar } from 'notistack';
 import { cartService } from '../services/cartService';
 import { wishlistService } from '../services/wishlistService';
+import { addToCart as addToCartAction } from '../store/slices/cartSlice';
 
 interface ProductCardProps {
   product: Product;
@@ -27,6 +28,7 @@ export const ProductCard = ({ product, onWishlistToggle, onAddToCart }: ProductC
   const navigate = useNavigate();
   const location = useLocation();
   const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useAppDispatch();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const wishlistItems = useAppSelector((state) => state.wishlist.items);
 
@@ -43,7 +45,8 @@ export const ProductCard = ({ product, onWishlistToggle, onAddToCart }: ProductC
     }
 
     try {
-      await cartService.addToCart(user.id, product.id, 1);
+      const item = await cartService.addToCart(user.id, product.id, 1);
+      dispatch(addToCartAction(item));
       enqueueSnackbar('Added to cart!', { variant: 'success' });
       onAddToCart?.();
     } catch (error) {

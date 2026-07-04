@@ -217,21 +217,25 @@ export const Header = () => {
               <Box
                 sx={{
                   position: "absolute",
-                  top: 4,
-                  right: 4,
-                  width: 16,
+                  top: 2,
+                  right: 2,
+                  minWidth: 16,
                   height: 16,
-                  background: C.pink,
+                  px: cartCount > 9 ? "3px" : 0,
+                  background: `linear-gradient(135deg, ${C.pink}, ${C.pinkDark})`,
                   color: "#fff",
-                  borderRadius: "50%",
+                  borderRadius: "9px",
+                  border: "1.5px solid #fff",
                   fontSize: 9,
+                  lineHeight: 1,
                   fontWeight: 800,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.25)",
                 }}
               >
-                {cartCount}
+                {cartCount > 99 ? "99+" : cartCount}
               </Box>
             )}
           </IconButton>

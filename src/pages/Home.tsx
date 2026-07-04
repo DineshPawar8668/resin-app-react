@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Box, Typography, Grid, Avatar, Chip } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +46,9 @@ export const Home = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [slide, setSlide] = useState(0);
   const [reviews, setReviews] = useState<OrderReview[]>([]);
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartXRef = useRef<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -78,19 +81,42 @@ export const Home = () => {
 
   const banners = categories.length > 0
     ? categories.map((cat, i) => ({
-        img: cat.image || cat.image_url || FALLBACK_BANNERS[i % FALLBACK_BANNERS.length].img,
-        tag: BANNER_TAGS[i % BANNER_TAGS.length],
-        title: cat.name,
-        sub: BANNER_SUBS[i % BANNER_SUBS.length],
-      }))
+      img: cat.image || cat.image_url || FALLBACK_BANNERS[i % FALLBACK_BANNERS.length].img,
+      tag: BANNER_TAGS[i % BANNER_TAGS.length],
+      title: cat.name,
+      sub: BANNER_SUBS[i % BANNER_SUBS.length],
+    }))
     : FALLBACK_BANNERS;
 
   /* auto-slide banner */
   useEffect(() => {
+    if (isDragging) return;
     const len = banners.length;
     const t = setInterval(() => setSlide((s) => (s + 1) % len), 4500);
     return () => clearInterval(t);
-  }, [banners.length]);
+  }, [banners.length, isDragging]);
+
+  /* swipe / drag handlers */
+  const SWIPE_THRESHOLD = 50;
+  const handleHeroPointerDown = (e: React.PointerEvent) => {
+    dragStartXRef.current = e.clientX;
+    setIsDragging(true);
+  };
+  const handleHeroPointerMove = (e: React.PointerEvent) => {
+    if (dragStartXRef.current === null) return;
+    setDragX(e.clientX - dragStartXRef.current);
+  };
+  const handleHeroPointerEnd = () => {
+    if (dragStartXRef.current === null) return;
+    if (dragX <= -SWIPE_THRESHOLD) {
+      setSlide((s) => (s + 1) % banners.length);
+    } else if (dragX >= SWIPE_THRESHOLD) {
+      setSlide((s) => (s - 1 + banners.length) % banners.length);
+    }
+    dragStartXRef.current = null;
+    setIsDragging(false);
+    setDragX(0);
+  };
 
   return (
     <>
@@ -180,20 +206,37 @@ export const Home = () => {
       <Box sx={{ background: L.cream, minHeight: "100vh", fontFamily: '"Poppins", sans-serif' }}>
 
         {/* ── HERO BANNER ──────────────────────────── */}
-        <Box sx={{ position: "relative", height: { xs: "72vh", md: "85vh" }, overflow: "hidden" }}>
-          {banners.map((b, i) => (
-            <Box
-              key={i}
-              sx={{
-                position: "absolute", inset: 0,
-                backgroundImage: `url(${b.img})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                opacity: i === slide ? 1 : 0,
-                transition: "opacity 0.8s ease",
-              }}
-            />
-          ))}
+        <Box
+          sx={{ position: "relative", height: { xs: "72vh", md: "85vh" }, overflow: "hidden" }}
+          onPointerDown={handleHeroPointerDown}
+          onPointerMove={handleHeroPointerMove}
+          onPointerUp={handleHeroPointerEnd}
+          onPointerCancel={handleHeroPointerEnd}
+          onPointerLeave={() => isDragging && handleHeroPointerEnd()}
+        >
+          <Box
+            sx={{
+              position: "absolute", inset: 0,
+              display: "flex", width: "100%", height: "100%",
+              touchAction: "pan-y",
+              cursor: isDragging ? "grabbing" : "grab",
+              transform: `translateX(calc(-${slide * 100}% + ${dragX}px))`,
+              transition: isDragging ? "none" : "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
+            }}
+          >
+            {banners.map((b, i) => (
+              <Box
+                key={i}
+                sx={{
+                  flex: "0 0 100%",
+                  height: "100%",
+                  backgroundImage: `url(${b.img})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
+            ))}
+          </Box>
 
           {/* overlay */}
           <Box sx={{
@@ -206,8 +249,20 @@ export const Home = () => {
             position: "relative", zIndex: 2,
             height: "100%", display: "flex", alignItems: "center",
             px: { xs: 3, sm: 6, md: 10 },
+            pointerEvents: "none",
           }}>
-            <Box sx={{ maxWidth: 580 }}>
+            <Box
+              key={slide}
+              sx={{
+                maxWidth: 580,
+                pointerEvents: "auto",
+                animation: "heroFadeUp 0.7s ease",
+                "@keyframes heroFadeUp": {
+                  "0%": { opacity: 0, transform: "translateY(28px)" },
+                  "100%": { opacity: 1, transform: "translateY(0)" },
+                },
+              }}
+            >
               <Box sx={{
                 display: "inline-flex", alignItems: "center", gap: 1,
                 background: L.goldLight,
@@ -291,28 +346,6 @@ export const Home = () => {
               />
             ))}
           </Box>
-        </Box>
-
-        {/* ── TRUST BAR ────────────────────────────── */}
-        <Box sx={{
-          background: L.dark,
-          display: "flex", justifyContent: "center", flexWrap: "wrap",
-          gap: { xs: 2, md: 5 }, px: { xs: 2, md: 4 }, py: { xs: 2, md: 2.5 },
-        }}>
-          {[
-            { Icon: Truck, label: "Free Delivery", sub: "On orders above ₹499" },
-            { Icon: RefreshCw, label: "10-Day Returns", sub: "Easy return policy" },
-            { Icon: Shield, label: "100% Authentic", sub: "Handcrafted guarantee" },
-            { Icon: Package, label: "Secure Packaging", sub: "Safe delivery assured" },
-          ].map(({ Icon, label, sub }, i) => (
-            <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Icon size={20} color={L.gold} />
-              <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{label}</Typography>
-                <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>{sub}</Typography>
-              </Box>
-            </Box>
-          ))}
         </Box>
 
 
@@ -605,40 +638,6 @@ export const Home = () => {
           </Box>
         )}
 
-        {/* ── BRAND STRIP ──────────────────────────── */}
-        <Box sx={{
-          background: `linear-gradient(135deg, ${L.dark} 0%, #3D1020 100%)`,
-          py: { xs: 5, md: 7 }, px: { xs: 3, md: 6 },
-          textAlign: "center",
-        }}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}>
-            <Sparkles size={16} color={L.gold} />
-            <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.gold, letterSpacing: 2, textTransform: "uppercase" }}>
-              Our Promise
-            </Typography>
-            <Sparkles size={16} color={L.gold} />
-          </Box>
-          <Typography sx={{
-            fontFamily: '"Playfair Display", serif',
-            fontSize: { xs: 22, md: 32 }, fontWeight: 700, color: "#fff",
-            maxWidth: 600, mx: "auto", lineHeight: 1.4, mb: 3,
-          }}>
-            Every piece tells a story of art & soul
-          </Typography>
-          <Box
-            component="button"
-            onClick={() => navigate("/products")}
-            sx={{
-              background: L.rose, color: "#fff", border: "none",
-              borderRadius: 2, px: 4, py: 1.5,
-              fontSize: 14, fontWeight: 700, fontFamily: '"Poppins", sans-serif',
-              cursor: "pointer",
-              boxShadow: `0 6px 24px rgba(194,24,91,0.4)`,
-            }}
-          >
-            Explore Full Collection
-          </Box>
-        </Box>
 
         {/* ── CUSTOMER REVIEWS ─────────────────────── */}
         <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 4 }, background: L.warm }}>

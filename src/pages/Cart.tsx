@@ -4,7 +4,8 @@ import { Trash2, Plus, Minus, ShoppingBag, BookOpen, ArrowRight, ShoppingCart } 
 import { useNavigate } from "react-router-dom";
 import { CartItem } from "../types";
 import { cartService } from "../services/cartService";
-import { useAppSelector } from "../store/hooks";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { setCartItems as setCartItemsAction, updateCartItemQuantity, removeFromCart as removeFromCartAction } from "../store/slices/cartSlice";
 import { useSnackbar } from "notistack";
 
 const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
@@ -12,6 +13,7 @@ const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
 export const Cart = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -27,6 +29,7 @@ export const Cart = () => {
       setLoading(true);
       const items = await cartService.getCartItems(user!.id);
       setCartItems(items);
+      dispatch(setCartItemsAction(items));
     } catch {
       enqueueSnackbar("Failed to load cart", { variant: "error" });
     } finally {
@@ -40,6 +43,7 @@ export const Cart = () => {
       setActionLoading(itemId);
       await cartService.updateQuantity(itemId, newQty);
       setCartItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, quantity: newQty } : i)));
+      dispatch(updateCartItemQuantity({ id: itemId, quantity: newQty }));
     } catch {
       enqueueSnackbar("Failed to update quantity", { variant: "error" });
     } finally {
@@ -52,6 +56,7 @@ export const Cart = () => {
       setActionLoading(itemId);
       await cartService.removeFromCart(itemId);
       setCartItems((prev) => prev.filter((i) => i.id !== itemId));
+      dispatch(removeFromCartAction(itemId));
       enqueueSnackbar("Item removed", { variant: "info" });
     } catch {
       enqueueSnackbar("Failed to remove item", { variant: "error" });

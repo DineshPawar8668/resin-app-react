@@ -15,7 +15,8 @@ import {
   InputLabel,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useAppSelector } from "../store/hooks";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { setCartItems as setCartItemsAction, clearCart as clearCartAction } from "../store/slices/cartSlice";
 import { cartService } from "../services/cartService";
 import { paymentService } from "../services/paymentService";
 import { useSnackbar } from "notistack";
@@ -70,6 +71,7 @@ export const Checkout = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const { user } = useAppSelector((s) => s.auth);
+  const dispatch = useAppDispatch();
 
   const [step, setStep] = useState<Step>("address");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -86,6 +88,7 @@ export const Checkout = () => {
     try {
       const items = await cartService.getCartItems(user!.id);
       setCartItems(items);
+      dispatch(setCartItemsAction(items));
     } catch {
       enqueueSnackbar("Failed to load cart", { variant: "error" });
     } finally {
@@ -140,6 +143,7 @@ export const Checkout = () => {
               address,
             );
             await cartService.clearCart(user.id);
+            dispatch(clearCartAction());
             enqueueSnackbar("Order placed successfully! Payment confirmed.", { variant: "success" });
             navigate("/my-orders");
           } catch {

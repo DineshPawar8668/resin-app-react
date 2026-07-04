@@ -21,7 +21,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { productService, ProductPagination } from "../services/productService";
 import { cartService } from "../services/cartService";
-import { useAppSelector } from "../store/hooks";
+import { useAppSelector, useAppDispatch } from "../store/hooks";
+import { addToCart as addToCartAction } from "../store/slices/cartSlice";
 import { getImageUrl } from "../lib/imageUrl";
 
 const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
@@ -57,6 +58,7 @@ const Products = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { enqueueSnackbar } = useSnackbar();
   const { isAuthenticated, user } = useAppSelector((s) => s.auth);
+  const dispatch = useAppDispatch();
 
   // ── STATE ──────────────────────────────────────────
   const [products, setProducts] = useState<any[]>([]);
@@ -169,7 +171,8 @@ const Products = () => {
     }
     try {
       setCartLoadingId(product.id);
-      await cartService.addToCart(user.id, product.id);
+      const item = await cartService.addToCart(user.id, product.id);
+      dispatch(addToCartAction(item));
       enqueueSnackbar("Added to cart!", { variant: "success" });
     } catch {
       enqueueSnackbar("Failed to add to cart", { variant: "error" });
@@ -206,7 +209,6 @@ const Products = () => {
             transform: "translateY(-6px)",
             boxShadow: "0 16px 40px rgba(194,24,91,0.15)",
           },
-          "&:hover .quick-actions": { opacity: 1, transform: "translateY(0)" },
           "&:hover .product-img": { transform: "scale(1.06)" },
         }}
       >
@@ -262,8 +264,8 @@ const Products = () => {
               display: "flex",
               flexDirection: "column",
               gap: 0.8,
-              opacity: 0,
-              transform: "translateY(8px)",
+              opacity: 1,
+              transform: "translateY(0)",
               transition: "opacity 0.2s, transform 0.2s",
             }}
           >
