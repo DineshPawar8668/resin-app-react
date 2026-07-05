@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Box, Avatar, Menu, MenuItem, Divider, Typography, InputBase, IconButton, Drawer, List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { productService } from "../../services/productService";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search, ShoppingCart, User, LogOut, Lock, Tag, Package, ClipboardList, ShoppingBag, Heart, X, Menu as MenuIcon, Phone, Info } from "lucide-react";
+import { Search, ShoppingCart, User, LogOut, Lock, Tag, Package, ClipboardList, ShoppingBag, Heart, X, Menu as MenuIcon, Phone, Info, Truck } from "lucide-react";
 import { useAppSelector } from "../../store/hooks";
 import { useAuth } from "../../contexts/AuthContext";
+import { CourierInfoModal } from "../CourierInfoModal";
 
 const C = {
   pink: "#C2185B",
@@ -30,6 +31,7 @@ export const Header = () => {
   const [barVisible, setBarVisible] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [courierInfoOpen, setCourierInfoOpen] = useState(false);
   const menuOpen = Boolean(anchorEl);
 
   useEffect(() => {
@@ -132,12 +134,12 @@ export const Header = () => {
               { label: "About Us", path: "/about-us" },
               { label: "Privacy Policy", path: "/privacy-policy" },
               { label: "Terms & Condition", path: "/terms-and-conditions" },
-              { label: "Refund Policy", path: "/refund-policy" },
-              { label: "Contact", path: "/contact" },
+              // { label: "Contact", path: "/contact" },
+              { label: "Courier Info", onClick: () => setCourierInfoOpen(true) },
             ].map((item) => (
               <Typography
                 key={item.label}
-                onClick={() => navigate(item.path)}
+                onClick={() => (item.onClick ? item.onClick() : navigate(item.path!))}
                 sx={{
                   fontSize: 13,
                   fontWeight: 500,
@@ -399,12 +401,14 @@ export const Header = () => {
             { label: "Products", path: "/products", icon: <Package size={18} color={C.pink} /> },
             { label: "About Us", path: "/about-us", icon: <Info size={18} color={C.pink} /> },
             { label: "Contact Us", path: "/contact", icon: <Phone size={18} color={C.pink} /> },
+            { label: "Courier Info", icon: <Truck size={18} color={C.pink} />, onClick: () => setCourierInfoOpen(true) },
           ].map((item) => (
             <ListItemButton
               key={item.label}
               onClick={() => {
                 setDrawerOpen(false);
-                navigate(item.path);
+                if (item.onClick) item.onClick();
+                else navigate(item.path!);
               }}
               sx={{
                 borderRadius: 2,
@@ -422,6 +426,7 @@ export const Header = () => {
         </List>
       </Drawer>
 
+      <CourierInfoModal open={courierInfoOpen} onClose={() => setCourierInfoOpen(false)} />
     </Box>
   );
 };

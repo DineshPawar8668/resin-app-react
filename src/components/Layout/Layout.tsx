@@ -2,6 +2,7 @@ import { Box } from '@mui/material';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { ChatBot } from '../ChatBot';
+import { SocialFloatingButtons } from '../SocialFloatingButtons';
 import { ReactNode } from 'react';
 
 interface LayoutProps {
@@ -16,6 +17,7 @@ export const Layout = ({ children }: LayoutProps) => {
         {children}
       </Box>
       <Footer />
+      <SocialFloatingButtons />
       <ChatBot />
     </Box>
   );

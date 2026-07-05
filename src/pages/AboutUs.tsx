@@ -1,8 +1,8 @@
 import { Box, Typography, Divider } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import {
-  ArrowLeft, Store, Users, ShoppingBag, Globe, Zap, Shield,
-  CheckCircle2, TrendingUp, Layers, Link2,
+  ArrowLeft, Sparkles, Heart, Gem, Palette, Truck, Shield,
+  CheckCircle2, TrendingUp, Layers, Gift,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -152,14 +152,14 @@ export const AboutUs = () => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 backdropFilter: 'blur(10px)',
               }}>
-                <ShoppingBag size={26} color="#fff" />
+                <Gem size={26} color="#fff" />
               </Box>
               <Box>
                 <Typography fontWeight={900} fontSize={{ xs: 20, sm: 26 }} color="#fff" lineHeight={1.1}>
-                  ShopSphere
+                  ShopIzara
                 </Typography>
                 <Typography fontSize={12} sx={{ color: 'rgba(255,255,255,0.75)' }}>
-                  Multi-Vendor SaaS E-Commerce Platform
+                  Handmade Resin Art Store
                 </Typography>
               </Box>
             </Box>
@@ -167,8 +167,9 @@ export const AboutUs = () => {
               fontSize={{ xs: 13, sm: 15 }}
               sx={{ color: 'rgba(255,255,255,0.9)', maxWidth: 520, lineHeight: 1.7 }}
             >
-              We empower businesses of every size to launch their own branded online store —
-              all running on a single, powerful platform. Multiple admins, one ecosystem.
+              We craft one-of-a-kind resin jewelry, home decor and gifting pieces by hand —
+              turning liquid resin, pigments and botanicals into wearable art and keepsakes
+              you won't find anywhere else.
             </Typography>
           </Box>
 
@@ -178,24 +179,24 @@ export const AboutUs = () => {
             px: { xs: 2, sm: 4 }, py: 2.5,
             borderBottom: '1px solid #f5f5f5',
           }}>
-            <StatBadge value="500+" label="Active Stores" />
+            <StatBadge value="5K+" label="Pieces Crafted" />
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-            <StatBadge value="50K+" label="Happy Customers" />
+            <StatBadge value="10K+" label="Happy Customers" />
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-            <StatBadge value="99.9%" label="Uptime" />
+            <StatBadge value="100%" label="Handmade" />
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-            <StatBadge value="24/7" label="Support" />
+            <StatBadge value="4.8★" label="Avg Rating" />
           </Box>
 
           {/* Mission */}
           <Box sx={{ px: { xs: 2.5, sm: 4 }, py: 3 }}>
             <Typography fontWeight={800} fontSize={15} mb={1}>Our Mission</Typography>
             <Typography fontSize={13.5} color="text.secondary" lineHeight={1.8}>
-              ShopSphere was built with one goal: make it ridiculously easy for any entrepreneur,
-              brand, or business to sell online — without worrying about infrastructure.
-              Each admin gets their own isolated storefront, their own product catalogue,
-              and their own customer base. Customers who land on an admin's unique link
-              see <em>only that admin's</em> products, giving every store a personal, focused feel.
+              ShopIzara was born from a love of resin art and a desire to bring handcrafted,
+              artisan-made pieces to every home in India. Every pendant, coaster, photo frame
+              and decor piece is poured, cured and finished by hand in small batches —
+              so <em>no two pieces are ever exactly alike</em>. We believe art should be
+              affordable, personal, and made with genuine care.
             </Typography>
           </Box>
         </Box>
@@ -205,30 +206,30 @@ export const AboutUs = () => {
           background: '#fff', borderRadius: '20px', overflow: 'hidden',
           boxShadow: '0 2px 12px rgba(0,0,0,0.06)', mb: 3,
         }}>
-          <SectionHeader icon={Layers} title="How It Works" />
+          <SectionHeader icon={Layers} title="How Our Resin Art Is Made" />
           <Box sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             <StepItem
               num={1}
-              title="Admin Signs Up & Gets a Unique Store Link"
-              desc="Every admin registers on ShopSphere and instantly receives a personalised store URL — e.g. shopsphere.com/store/your-brand. No coding needed."
+              title="Design & Mix"
+              desc="Every piece starts as a sketch. We mix food-safe epoxy resin with pigments, alcohol inks, dried flowers or glitter to bring the design to life."
             />
             <Box sx={{ height: 1, background: '#f5f5f5' }} />
             <StepItem
               num={2}
-              title="Admin Adds Their Products"
-              desc="Admins manage their own product catalogue independently. Prices, images, offers, stock — everything stays within their dashboard and is visible only on their storefront."
+              title="Pour & Cure"
+              desc="The resin is carefully poured into hand-finished moulds and left to cure for 24–48 hours in a dust-free studio, layer by layer where needed."
             />
             <Box sx={{ height: 1, background: '#f5f5f5' }} />
             <StepItem
               num={3}
-              title="Customers Shop on That Admin's Store"
-              desc="When a customer visits an admin's link, they see a fully branded experience with only that admin's products. Orders, payments, and tracking are all scoped to that store."
+              title="Sand & Polish"
+              desc="Once cured, every piece is de-moulded, sanded and hand-polished to a glass-like shine, then checked for quality and finish."
             />
             <Box sx={{ height: 1, background: '#f5f5f5' }} />
             <StepItem
               num={4}
-              title="Platform Handles the Heavy Lifting"
-              desc="ShopSphere manages authentication, payments, order management, and notifications centrally — so admins focus on selling, not tech."
+              title="Pack & Ship"
+              desc="Finished pieces are carefully wrapped in protective packaging and shipped across India, ready to be unwrapped and loved."
             />
           </Box>
         </Box>
@@ -238,47 +239,47 @@ export const AboutUs = () => {
           background: '#fff', borderRadius: '20px', overflow: 'hidden',
           boxShadow: '0 2px 12px rgba(0,0,0,0.06)', mb: 3,
         }}>
-          <SectionHeader icon={TrendingUp} title="Why ShopSphere?" />
+          <SectionHeader icon={TrendingUp} title="Why Choose ShopIzara?" />
           <Box sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
             <FeatureCard
-              icon={Store}
-              title="Isolated Storefronts"
-              desc="Each admin's store is completely separate. Customers see only the products of the store they visit."
+              icon={Heart}
+              title="100% Handmade"
+              desc="Every resin piece is individually crafted by our artisans — no mass production, no two pieces identical."
               color="#F06292"
               bg={PINK[50]}
             />
             <FeatureCard
-              icon={Link2}
-              title="Custom Store Links"
-              desc="Admins share their unique URL. Traffic is routed automatically to the right storefront."
+              icon={Palette}
+              title="Unique Designs"
+              desc="From resin jewelry to coasters and photo frames, each design blends colour, texture and creativity."
               color="#1976D2"
               bg="#E3F2FD"
             />
             <FeatureCard
-              icon={Users}
-              title="Multi-Admin SaaS"
-              desc="Unlimited admins on one platform. Each has full control of their own catalogue and orders."
+              icon={Gift}
+              title="Perfect for Gifting"
+              desc="Beautifully packaged resin art makes a thoughtful, memorable gift for every occasion."
               color="#7B1FA2"
               bg="#F3E5F5"
             />
             <FeatureCard
-              icon={Zap}
-              title="Instant Setup"
-              desc="Go live in minutes. No server setup, no deployment headaches. Just sign up and start selling."
+              icon={Sparkles}
+              title="Premium Finish"
+              desc="Food-safe, UV-resistant resin polished to a glossy, long-lasting shine on every piece."
               color="#F57C00"
               bg="#FFF3E0"
             />
             <FeatureCard
               icon={Shield}
-              title="Secure & Reliable"
-              desc="Bank-grade security, encrypted payments, and 99.9% uptime — your store is always open."
+              title="Quality Checked"
+              desc="Every piece is inspected for durability and finish before it leaves our studio."
               color="#388E3C"
               bg="#E8F5E9"
             />
             <FeatureCard
-              icon={Globe}
-              title="Sell to Anyone"
-              desc="Mobile-first, fast-loading storefronts that work beautifully across all devices and regions."
+              icon={Truck}
+              title="Pan-India Delivery"
+              desc="Safely packaged and shipped across India, so your resin art arrives exactly as crafted."
               color="#0288D1"
               bg="#E1F5FE"
             />
@@ -293,11 +294,11 @@ export const AboutUs = () => {
           <SectionHeader icon={CheckCircle2} title="What You Get as a Customer" />
           <Box sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {[
-              { text: 'A focused, clutter-free shopping experience with products from one trusted store' },
-              { text: 'Easy order tracking from placement to doorstep delivery' },
-              { text: 'Secure payments with instant confirmation' },
-              { text: 'Order history and re-order support in your personal dashboard' },
-              { text: 'Responsive support from the store admin youre shopping with' },
+              { text: 'Genuinely handmade resin jewelry, decor and gifting pieces — never mass-produced' },
+              { text: 'Easy order tracking from crafting to doorstep delivery' },
+              { text: 'Secure payments with instant order confirmation' },
+              { text: 'Order history and easy re-ordering from your personal dashboard' },
+              { text: 'Friendly, responsive support for sizing, customisation and care tips' },
             ].map((item, i) => (
               <Box key={i} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
                 <Box sx={{
@@ -322,10 +323,10 @@ export const AboutUs = () => {
         }}>
           <Box>
             <Typography fontWeight={900} fontSize={17} color="#fff">
-              Ready to start shopping?
+              Ready to explore handmade resin art?
             </Typography>
             <Typography fontSize={13} sx={{ color: 'rgba(255,255,255,0.8)' }}>
-              Visit the store link shared with you to explore products.
+              Browse our collection of resin jewelry, decor and gifts.
             </Typography>
           </Box>
           <Box

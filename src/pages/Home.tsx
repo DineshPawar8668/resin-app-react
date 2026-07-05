@@ -80,7 +80,7 @@ export const Home = () => {
   }, []);
 
   const banners = categories.length > 0
-    ? categories.map((cat, i) => ({
+    ? categories.slice(8).map((cat, i) => ({
       img: cat.image || cat.image_url || FALLBACK_BANNERS[i % FALLBACK_BANNERS.length].img,
       tag: BANNER_TAGS[i % BANNER_TAGS.length],
       title: cat.name,
@@ -353,9 +353,9 @@ export const Home = () => {
         {categories.length > 0 && (
           <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 4 } }}>
             <Box sx={{ textAlign: "center", mb: 4 }}>
-              <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.rose, letterSpacing: 2, textTransform: "uppercase", mb: 0.8 }}>
+              {/* <Typography sx={{ fontSize: 11, fontWeight: 700, color: L.rose, letterSpacing: 2, textTransform: "uppercase", mb: 0.8 }}>
                 Browse By
-              </Typography>
+              </Typography> */}
               <Typography sx={{ fontFamily: '"Playfair Display", serif', fontSize: { xs: 24, md: 30 }, fontWeight: 700, color: L.dark }}>
                 Collections
               </Typography>
@@ -442,25 +442,16 @@ export const Home = () => {
           display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
           minHeight: { xs: "auto", md: 300 },
         }}>
-          {[
-            {
-              img: "/hero/r-1.jpg",
-              tag: "Bestseller",
-              title: "Handcrafted Jewellery",
-              sub: "Each piece is unique, made with love",
-              path: "/products?category=6a27eddca127208865d2c2aa",
-            },
-            {
-              img: "/hero/r-4.jpg",
-              tag: "New In",
-              title: "Home Décor Art",
-              sub: "Elevate every corner of your space",
-              path: "/products?category=6a27ed97a127208865d2c2a2",
-            },
-          ].map((b, i) => (
+          {categories.slice(8, 14).map((cat, i) => ({
+            img: cat.image || cat.image_url || FALLBACK_BANNERS[i % FALLBACK_BANNERS.length].img,
+            tag: BANNER_TAGS[i % BANNER_TAGS.length],
+            title: cat.name,
+            sub: BANNER_SUBS[i % BANNER_SUBS.length],
+            path:cat.id
+          })).map((b, i) => (
             <Box
               key={i}
-              onClick={() => navigate(b.path)}
+              onClick={() => navigate(`/products?category=${b.path}`)}
               sx={{
                 position: "relative", height: { xs: 200, md: 300 },
                 overflow: "hidden", cursor: "pointer",
@@ -479,13 +470,6 @@ export const Home = () => {
                 p: { xs: 2.5, md: 3.5 },
               }}>
                 <Chip label={b.tag} size="small" sx={{ background: L.rose, color: "#fff", fontWeight: 700, fontSize: 10, width: "fit-content", mb: 1 }} />
-                <Typography sx={{ fontFamily: '"Playfair Display", serif', fontSize: { xs: 20, md: 24 }, fontWeight: 700, color: "#fff" }}>
-                  {b.title}
-                </Typography>
-                <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.75)", mt: 0.5 }}>{b.sub}</Typography>
-                <Box sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: L.gold }}>Explore →</Typography>
-                </Box>
               </Box>
             </Box>
           ))}

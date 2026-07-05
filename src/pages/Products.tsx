@@ -93,6 +93,11 @@ const Products = () => {
     productService.getCategories().then(setCategories).catch(() => {});
   }, []);
 
+  // ── SCROLL TO TOP ON MOUNT ─────────────────────────
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }, []);
+
   // ── WATCH URL PARAMS ──
   const isFirstSearchParamRender = useRef(true);
   useEffect(() => {
@@ -104,6 +109,7 @@ const Products = () => {
     appendModeRef.current = false;
     setSelectedCats(cat ? [cat] : []);
     setPage(1);
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [searchParams]);
 
   // ── MAIN FETCH ──

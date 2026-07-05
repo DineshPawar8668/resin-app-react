@@ -8,6 +8,7 @@ import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { setCartItems as setCartItemsAction, addToCart as addToCartAction, removeCartInstance, removeFromCart as removeFromCartAction } from "../store/slices/cartSlice";
 import { useSnackbar } from "notistack";
 import { AddToCartDetailsModal } from "../components/AddToCartDetailsModal";
+import { CourierInfoModal } from "../components/CourierInfoModal";
 
 const PINK = { 600: "#C2185B", 500: "#D81B60", 50: "#FFF0F6", 100: "#FCE4EC" };
 
@@ -22,6 +23,7 @@ export const Cart = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [addModalItem, setAddModalItem] = useState<CartItem | null>(null);
   const [pickerItem, setPickerItem] = useState<CartItem | null>(null);
+  const [courierInfoOpen, setCourierInfoOpen] = useState(true);
 
   useEffect(() => {
     if (user) loadCart();
@@ -167,44 +169,47 @@ export const Cart = () => {
 
   if (cartItems.length === 0) {
     return (
-      <Box sx={{ minHeight: "70vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, px: 2 }}>
-        <Box
-          sx={{
-            width: 110,
-            height: 110,
-            borderRadius: "50%",
-            background: PINK[50],
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            mb: 1,
-          }}
-        >
-          <ShoppingBag size={48} color={PINK[500]} strokeWidth={1.5} />
+      <>
+        <Box sx={{ minHeight: "70vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, px: 2 }}>
+          <Box
+            sx={{
+              width: 110,
+              height: 110,
+              borderRadius: "50%",
+              background: PINK[50],
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mb: 1,
+            }}
+          >
+            <ShoppingBag size={48} color={PINK[500]} strokeWidth={1.5} />
+          </Box>
+          <Typography variant="h5" fontWeight={800} color="#1a1a1a">
+            Your cart is empty
+          </Typography>
+          <Typography color="text.secondary" textAlign="center" maxWidth={340}>
+            Looks like you haven't added any resin art products yet. Explore our collection!
+          </Typography>
+          <Button
+            variant="contained"
+            endIcon={<ArrowRight size={16} />}
+            onClick={() => navigate("/products")}
+            sx={{
+              mt: 1,
+              px: 3,
+              py: 1.2,
+              borderRadius: 3,
+              fontWeight: 700,
+              background: `linear-gradient(135deg, ${PINK[600]}, ${PINK[500]})`,
+              boxShadow: `0 6px 20px rgba(194,24,91,0.3)`,
+            }}
+          >
+            Shop Now
+          </Button>
         </Box>
-        <Typography variant="h5" fontWeight={800} color="#1a1a1a">
-          Your cart is empty
-        </Typography>
-        <Typography color="text.secondary" textAlign="center" maxWidth={340}>
-          Looks like you haven't added any resin art products yet. Explore our collection!
-        </Typography>
-        <Button
-          variant="contained"
-          endIcon={<ArrowRight size={16} />}
-          onClick={() => navigate("/products")}
-          sx={{
-            mt: 1,
-            px: 3,
-            py: 1.2,
-            borderRadius: 3,
-            fontWeight: 700,
-            background: `linear-gradient(135deg, ${PINK[600]}, ${PINK[500]})`,
-            boxShadow: `0 6px 20px rgba(194,24,91,0.3)`,
-          }}
-        >
-          Shop Now
-        </Button>
-      </Box>
+        <CourierInfoModal open={courierInfoOpen} onClose={() => setCourierInfoOpen(false)} />
+      </>
     );
   }
 
@@ -607,6 +612,8 @@ export const Cart = () => {
         </Box>
       </Box>
     </Box>
+
+    <CourierInfoModal open={courierInfoOpen} onClose={() => setCourierInfoOpen(false)} />
 
     <AddToCartDetailsModal
       open={!!addModalItem}

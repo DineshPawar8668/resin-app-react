@@ -55,9 +55,6 @@ export const Footer = () => {
               <MuiLink onClick={() => navigate("/terms-and-conditions")} underline="hover" color="text.secondary" sx={{ cursor: "pointer" }}>
                 Terms and Conditions
               </MuiLink>
-              <MuiLink onClick={() => navigate("/refund-policy")} underline="hover" color="text.secondary" sx={{ cursor: "pointer" }}>
-                Refund Policy
-              </MuiLink>
             </Box>
           </Grid>
         </Grid>
