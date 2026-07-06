@@ -80,7 +80,7 @@ export const Home = () => {
   }, []);
 
   const banners = categories.length > 0
-    ? categories.slice(8).map((cat, i) => ({
+    ? categories.slice(8,14).map((cat, i) => ({
       img: cat.image || cat.image_url || FALLBACK_BANNERS[i % FALLBACK_BANNERS.length].img,
       tag: BANNER_TAGS[i % BANNER_TAGS.length],
       title: cat.name,
@@ -640,37 +640,44 @@ export const Home = () => {
                 No reviews yet. Be the first to review!
               </Typography>
             ) : (
-              <Grid container spacing={{ xs: 1.5, md: 2.5 }}>
+              <Box sx={{
+                display: "flex",
+                gap: { xs: 1.5, md: 2.5 },
+                overflowX: "auto",
+                pb: 1,
+                scrollbarWidth: "none",
+                "&::-webkit-scrollbar": { display: "none" },
+              }}>
                 {reviews.map((r) => (
-                  <Grid item xs={12} sm={6} md={4} key={r._id}>
-                    <Box sx={{
-                      background: L.white, borderRadius: 3, p: 3,
-                      boxShadow: "0 2px 16px rgba(26,10,18,0.07)",
-                      height: "100%",
-                      "&:hover": { boxShadow: "0 6px 24px rgba(26,10,18,0.13)" },
-                      transition: "box-shadow 0.2s",
-                    }}>
-                      {/* stars */}
-                      <Box sx={{ display: "flex", gap: 0.3, mb: 1.5 }}>
-                        {Array.from({ length: r.ratings }).map((_, j) => (
-                          <Star key={j} size={14} fill="#FFD700" color="#FFD700" />
-                        ))}
-                      </Box>
-                      <Typography sx={{ fontSize: 13, color: "#333", fontStyle: "italic", lineHeight: 1.65, mb: 2 }}>
-                        "{r.description || "Great product!"}"
-                      </Typography>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                        <Avatar sx={{ width: 38, height: 38, background: L.rose, fontSize: 14, fontWeight: 700 }}>
-                          {r.Customername?.[0]?.toUpperCase() ?? "?"}
-                        </Avatar>
-                        <Typography sx={{ fontWeight: 700, fontSize: 13, color: L.dark }}>
-                          {r.Customername}
-                        </Typography>
-                      </Box>
+                  <Box key={r._id} sx={{
+                    background: L.white, borderRadius: 3, p: 3,
+                    boxShadow: "0 2px 16px rgba(26,10,18,0.07)",
+                    minWidth: { xs: 260, md: 320 },
+                    maxWidth: { xs: 260, md: 320 },
+                    flexShrink: 0,
+                    "&:hover": { boxShadow: "0 6px 24px rgba(26,10,18,0.13)" },
+                    transition: "box-shadow 0.2s",
+                  }}>
+                    {/* stars */}
+                    <Box sx={{ display: "flex", gap: 0.3, mb: 1.5 }}>
+                      {Array.from({ length: r.ratings }).map((_, j) => (
+                        <Star key={j} size={14} fill="#FFD700" color="#FFD700" />
+                      ))}
                     </Box>
-                  </Grid>
+                    <Typography sx={{ fontSize: 13, color: "#333", fontStyle: "italic", lineHeight: 1.65, mb: 2 }}>
+                      "{r.description || "Great product!"}"
+                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                      <Avatar sx={{ width: 38, height: 38, background: L.rose, fontSize: 14, fontWeight: 700 }}>
+                        {r.Customername?.[0]?.toUpperCase() ?? "?"}
+                      </Avatar>
+                      <Typography sx={{ fontWeight: 700, fontSize: 13, color: L.dark }}>
+                        {r.Customername}
+                      </Typography>
+                    </Box>
+                  </Box>
                 ))}
-              </Grid>
+              </Box>
             )}
           </Box>
         </Box>
