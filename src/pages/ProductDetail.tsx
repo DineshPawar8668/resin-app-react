@@ -12,8 +12,9 @@ import {
   CircularProgress,
   Divider,
   Grid,
+  Dialog,
 } from "@mui/material";
-import { Heart, ShoppingCart, Plus, Minus, Star, Send, Play, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, ShoppingCart, Plus, Minus, Star, Send, Play, ChevronLeft, ChevronRight, Camera, X } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { productService } from "../services/productService";
 import { cartService, AddToCartDetails } from "../services/cartService";
@@ -65,10 +66,21 @@ export const ProductDetail = () => {
   const [hoverRating, setHoverRating] = useState<number>(-1);
   const [nameError, setNameError] = useState("");
   const [ratingError, setRatingError] = useState("");
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const [reviewImagePreviews, setReviewImagePreviews] = useState<string[]>([]);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const reviewImageInputRef = useRef<HTMLInputElement>(null);
+  const MAX_REVIEW_IMAGES = 5;
 
   useEffect(() => {
     if (id) { setSizeVariants([]); setSuggestions([]); loadProduct(); loadReviews(); }
   }, [id]);
+
+  useEffect(() => {
+    const urls = reviewImages.map((f) => URL.createObjectURL(f));
+    setReviewImagePreviews(urls);
+    return () => { urls.forEach((u) => URL.revokeObjectURL(u)); };
+  }, [reviewImages]);
 
   const loadProduct = async () => {
     try {
@@ -102,22 +114,17 @@ export const ProductDetail = () => {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [detailsModalKey, setDetailsModalKey] = useState(0);
   const [remainingUnits, setRemainingUnits] = useState(0);
-  const [pendingAction, setPendingAction] = useState<"cart" | "buyNow" | null>(null);
 
-  const startAddFlow = (action: "cart" | "buyNow") => {
+  const handleAddToCart = () => {
     if (!isAuthenticated || !user) {
-      enqueueSnackbar(action === "cart" ? "Please login to add items to cart" : "Please login to continue", { variant: "warning" });
+      enqueueSnackbar("Please login to add items to cart", { variant: "warning" });
       navigate("/login");
       return;
     }
-    setPendingAction(action);
     setRemainingUnits(qty);
     setDetailsModalKey((k) => k + 1);
     setDetailsModalOpen(true);
   };
-
-  const handleAddToCart = () => startAddFlow("cart");
-  const handleBuyNow = () => startAddFlow("buyNow");
 
   const handleDetailsSubmit = async (values: AddToCartDetails) => {
     if (!user) return;
@@ -132,8 +139,6 @@ export const ProductDetail = () => {
       } else {
         setDetailsModalOpen(false);
         enqueueSnackbar("Added to cart!", { variant: "success" });
-        if (pendingAction === "buyNow") navigate("/cart");
-        setPendingAction(null);
       }
     } catch {
       enqueueSnackbar("Failed to add to cart", { variant: "error" });
@@ -157,6 +162,21 @@ export const ProductDetail = () => {
     } catch { enqueueSnackbar("Failed to update wishlist", { variant: "error" }); }
   };
 
+  const handleReviewImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!files.length) return;
+    const validFiles = files.filter((f) => f.type.startsWith("image/"));
+    if (validFiles.length !== files.length) {
+      enqueueSnackbar("Only image files are allowed", { variant: "error" });
+    }
+    setReviewImages((prev) => [...prev, ...validFiles].slice(0, MAX_REVIEW_IMAGES));
+  };
+
+  const handleRemoveReviewImage = (index: number) => {
+    setReviewImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmitReview = async () => {
     let valid = true;
     if (!reviewName.trim()) { setNameError("Name is required"); valid = false; } else setNameError("");
@@ -164,9 +184,9 @@ export const ProductDetail = () => {
     if (!valid) return;
     try {
       setReviewSubmitting(true);
-      await productReviewService.create({ product_id: id!, name: reviewName.trim(), rating: reviewRating!, comment: reviewComment.trim() });
+      await productReviewService.create({ product_id: id!, name: reviewName.trim(), rating: reviewRating!, comment: reviewComment.trim(), images: reviewImages });
       enqueueSnackbar("Review submitted! Thank you.", { variant: "success" });
-      setReviewName(""); setReviewRating(null); setReviewComment("");
+      setReviewName(""); setReviewRating(null); setReviewComment(""); setReviewImages([]);
       loadReviews();
     } catch { enqueueSnackbar("Failed to submit review", { variant: "error" }); }
     finally { setReviewSubmitting(false); }
@@ -491,12 +511,6 @@ export const ProductDetail = () => {
             >
               Add to Cart
             </Button>
-            <Button
-              fullWidth variant="outlined" disabled={cartLoading} onClick={handleBuyNow}
-              sx={{ borderColor: PINK.main, color: PINK.main, py: 1.4, fontWeight: 700, "&:hover": { borderColor: PINK.dark, color: PINK.dark } }}
-            >
-              Buy Now
-            </Button>
             <IconButton onClick={handleWishlist} sx={{ border: "1px solid #e0e0e0", borderRadius: 2, px: 1.5 }}>
               <Heart fill={isWish ? PINK.main : "none"} color={isWish ? PINK.main : "gray"} />
             </IconButton>
@@ -554,6 +568,29 @@ export const ProductDetail = () => {
                       </Box>
                       <Rating value={r.rating} size="small" readOnly sx={{ color: PINK.main, mt: 0.3 }} />
                       {r.comment && <Typography fontSize={13} color="#444" mt={0.8} lineHeight={1.6}>{r.comment}</Typography>}
+                      {r.images && r.images.length > 0 && (
+                        <Box sx={{ display: "flex", gap: 1, mt: 1.2, overflowX: "auto", pb: 0.5 }}>
+                          {r.images.map((img, i) => (
+                            <Box
+                              key={i}
+                              component="img"
+                              src={img}
+                              onClick={() => setLightboxImage(img)}
+                              sx={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: 1.5,
+                                objectFit: "cover",
+                                flexShrink: 0,
+                                cursor: "pointer",
+                                border: "1px solid #eee",
+                                transition: "transform 0.15s",
+                                "&:hover": { transform: "scale(1.05)" },
+                              }}
+                            />
+                          ))}
+                        </Box>
+                      )}
                     </Box>
                   </Box>
                 </Box>
@@ -586,10 +623,49 @@ export const ProductDetail = () => {
         <TextField label="Your Name *" fullWidth value={reviewName} onChange={(e) => { setReviewName(e.target.value); if (e.target.value.trim()) setNameError(""); }} error={!!nameError} helperText={nameError} size="small" sx={{ mb: 2, "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: PINK.main }, "& .MuiInputLabel-root.Mui-focused": { color: PINK.main } }} />
         <TextField label="Your Review (optional)" fullWidth multiline rows={3} value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} size="small" placeholder="Tell others what you think about this product…" sx={{ mb: 3, "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: PINK.main }, "& .MuiInputLabel-root.Mui-focused": { color: PINK.main } }} />
 
+        <Box mb={3}>
+          <Typography fontSize={13} fontWeight={600} mb={1}>Add Photos (optional)</Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            {reviewImagePreviews.map((src, i) => (
+              <Box key={i} sx={{ position: "relative", width: 64, height: 64, borderRadius: 1.5, overflow: "hidden", border: "1px solid #eee" }}>
+                <Box component="img" src={src} sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemoveReviewImage(i)}
+                  sx={{ position: "absolute", top: 2, right: 2, bgcolor: "rgba(0,0,0,0.6)", p: 0.3, "&:hover": { bgcolor: "rgba(0,0,0,0.8)" } }}
+                >
+                  <X size={12} color="#fff" />
+                </IconButton>
+              </Box>
+            ))}
+            {reviewImages.length < MAX_REVIEW_IMAGES && (
+              <Box
+                onClick={() => reviewImageInputRef.current?.click()}
+                sx={{ width: 64, height: 64, borderRadius: 1.5, border: "2px dashed #ddd", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "text.secondary", "&:hover": { borderColor: PINK.main, color: PINK.main } }}
+              >
+                <Camera size={18} />
+                <Typography fontSize={9} mt={0.3}>Add</Typography>
+              </Box>
+            )}
+          </Box>
+          <input ref={reviewImageInputRef} type="file" accept="image/*" multiple hidden onChange={handleReviewImagesChange} />
+          <Typography fontSize={11} color="text.disabled" mt={0.8}>Up to {MAX_REVIEW_IMAGES} photos, 5 MB each</Typography>
+        </Box>
+
         <Button fullWidth variant="contained" disabled={reviewSubmitting} onClick={handleSubmitReview} startIcon={reviewSubmitting ? <CircularProgress size={16} color="inherit" /> : <Send size={16} />} sx={{ py: 1.3, fontWeight: 700, fontSize: 15, background: `linear-gradient(135deg, ${PINK.dark} 0%, ${PINK.main} 100%)`, "&:hover": { background: `linear-gradient(135deg, ${PINK.dark} 0%, ${PINK.dark} 100%)` } }}>
           {reviewSubmitting ? "Submitting…" : "Submit Review"}
         </Button>
       </Box>
+
+      {/* Review image lightbox */}
+      <Dialog open={!!lightboxImage} onClose={() => setLightboxImage(null)} maxWidth="md">
+        <Box sx={{ position: "relative", bgcolor: "#000" }}>
+          <IconButton onClick={() => setLightboxImage(null)} sx={{ position: "absolute", top: 8, right: 8, bgcolor: "rgba(255,255,255,0.9)", "&:hover": { bgcolor: "#fff" }, zIndex: 1 }}>
+            <X size={18} />
+          </IconButton>
+          {lightboxImage && <Box component="img" src={lightboxImage} sx={{ display: "block", maxWidth: "100%", maxHeight: "80vh", mx: "auto" }} />}
+        </Box>
+      </Dialog>
       {/* ════════════════ YOU MAY ALSO LIKE ════════════════ */}
       {suggestions.length > 0 && (
         <>

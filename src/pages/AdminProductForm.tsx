@@ -11,6 +11,7 @@ import {
   IconButton,
   InputAdornment,
   InputLabel,
+  LinearProgress,
   MenuItem,
   Select,
   Switch,
@@ -114,6 +115,10 @@ export const AdminProductForm = () => {
   const [videoPreview, setVideoPreview] = useState('');
   const [videoExistingId, setVideoExistingId] = useState('');
   const [removeVideo, setRemoveVideo] = useState(false);
+  // Public_id of a video pre-uploaded to Cloudinary this session (not yet attached to a saved product)
+  const [videoUploadPublicId, setVideoUploadPublicId] = useState('');
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -126,6 +131,10 @@ export const AdminProductForm = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
+      if (videoUploading) {
+        enqueueSnackbar('Please wait for the video to finish uploading', { variant: 'warning' });
+        return;
+      }
       const hasAnyImage = imageSlots.some((s) => s.preview);
       if (!hasAnyImage) { setMediaError('At least one product image is required'); return; }
       setMediaError('');
@@ -157,7 +166,7 @@ export const AdminProductForm = () => {
             }))
           ));
           imageSlots.forEach((slot) => { if (slot.file) fd.append('images', slot.file); });
-          if (videoFile) fd.append('video', videoFile);
+          if (videoUploadPublicId) fd.append('video_public_id', videoUploadPublicId);
 
           await productService.createWithSizes(fd);
           enqueueSnackbar('Products created successfully', { variant: 'success' });
@@ -196,7 +205,7 @@ export const AdminProductForm = () => {
         }
 
         imageSlots.forEach((slot) => { if (slot.file) fd.append('images', slot.file); });
-        if (videoFile) fd.append('video', videoFile);
+        if (videoUploadPublicId) fd.append('video_public_id', videoUploadPublicId);
 
         if (isEdit && id) {
           await productService.update(id, fd);
@@ -281,18 +290,45 @@ export const AdminProductForm = () => {
   };
 
   // ── Video slot handlers ───────────────────────────────────────────────────
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Uploads the video to Cloudinary immediately so the eventual product save request stays fast.
+  const handleVideoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
     if (!file.type.startsWith('video/')) { enqueueSnackbar('Only video files are allowed', { variant: 'error' }); return; }
+
+    // A previous pre-uploaded (not yet saved) video is being swapped out — clean it up
+    const staleUploadId = videoUploadPublicId;
+
     setVideoFile(file);
     setVideoPreview(URL.createObjectURL(file));
     setRemoveVideo(false);
-    e.target.value = '';
+    setVideoUploadPublicId('');
+    setVideoUploadProgress(0);
+    setVideoUploading(true);
+
+    if (staleUploadId) {
+      productService.deleteUploadedVideo(staleUploadId).catch(() => {});
+    }
+
+    try {
+      const publicId = await productService.uploadVideo(file, setVideoUploadProgress);
+      setVideoUploadPublicId(publicId);
+    } catch {
+      enqueueSnackbar('Video upload failed', { variant: 'error' });
+      setVideoFile(null);
+      setVideoPreview('');
+    } finally {
+      setVideoUploading(false);
+    }
   };
 
   const handleRemoveVideo = () => {
+    if (videoUploadPublicId) {
+      productService.deleteUploadedVideo(videoUploadPublicId).catch(() => {});
+    }
     setVideoFile(null); setVideoPreview(''); setRemoveVideo(true); setVideoExistingId('');
+    setVideoUploadPublicId(''); setVideoUploadProgress(0);
   };
 
   const price = Number(formik.values.price) || 0;
@@ -656,18 +692,37 @@ export const AdminProductForm = () => {
 
                 {hasVideo ? (
                   <Box sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', bgcolor: '#000' }}>
-                    <Box component="video" src={videoPreview} controls sx={{ width: '100%', maxHeight: 160, display: 'block', objectFit: 'contain' }} />
+                    <Box component="video" src={videoPreview} controls={!videoUploading} sx={{ width: '100%', maxHeight: 160, display: 'block', objectFit: 'contain' }} />
                     <Box sx={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 0.8 }}>
-                      <IconButton size="small" onClick={() => videoInputRef.current?.click()} sx={{ bgcolor: 'rgba(255,255,255,0.88)', '&:hover': { bgcolor: '#fff' }, p: 0.6 }}>
+                      <IconButton size="small" disabled={videoUploading} onClick={() => videoInputRef.current?.click()} sx={{ bgcolor: 'rgba(255,255,255,0.88)', '&:hover': { bgcolor: '#fff' }, p: 0.6 }}>
                         <UploadCloud size={14} color={PINK[600]} />
                       </IconButton>
-                      <IconButton size="small" onClick={handleRemoveVideo} sx={{ bgcolor: 'rgba(211,47,47,0.88)', '&:hover': { bgcolor: '#c62828' }, p: 0.6 }}>
+                      <IconButton size="small" disabled={videoUploading} onClick={handleRemoveVideo} sx={{ bgcolor: 'rgba(211,47,47,0.88)', '&:hover': { bgcolor: '#c62828' }, p: 0.6 }}>
                         <X size={14} color="#fff" />
                       </IconButton>
                     </Box>
-                    {videoFile && (
+                    {videoFile && !videoUploading && (
                       <Box sx={{ position: 'absolute', bottom: 6, left: 6, bgcolor: 'rgba(0,0,0,0.65)', color: '#fff', fontSize: 10, px: 1, py: 0.3, borderRadius: 1, maxWidth: 'calc(100% - 70px)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {videoFile.name}
+                      </Box>
+                    )}
+                    {videoUploading && (
+                      <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0,0,0,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, px: 3 }}>
+                        <Typography fontSize={12} color="#fff" fontWeight={700}>
+                          Uploading video… {videoUploadProgress}%
+                        </Typography>
+                        <Box sx={{ width: '100%' }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={videoUploadProgress}
+                            sx={{
+                              height: 6,
+                              borderRadius: 3,
+                              bgcolor: 'rgba(255,255,255,0.25)',
+                              '& .MuiLinearProgress-bar': { bgcolor: PINK[500] },
+                            }}
+                          />
+                        </Box>
                       </Box>
                     )}
                   </Box>
@@ -692,8 +747,8 @@ export const AdminProductForm = () => {
             <Button variant="outlined" onClick={() => navigate('/admin/products')} disabled={submitting} sx={{ fontWeight: 600, borderColor: 'divider', px: 3, minWidth: 110 }}>
               Cancel
             </Button>
-            <Button type="submit" variant="contained" disabled={submitting} sx={{ fontWeight: 700, px: 4, minWidth: 160, background: `linear-gradient(135deg, ${PINK[600]} 0%, ${PINK[500]} 100%)`, boxShadow: `0 4px 14px ${PINK[500]}50`, '&:hover': { background: `linear-gradient(135deg, ${PINK[600]} 0%, ${PINK[600]} 100%)` } }}>
-              {submitting ? <CircularProgress size={20} color="inherit" /> : isEdit ? 'Update Product' : hasSizes ? `Create ${sizeRows.length} Product${sizeRows.length > 1 ? 's' : ''}` : 'Create Product'}
+            <Button type="submit" variant="contained" disabled={submitting || videoUploading} sx={{ fontWeight: 700, px: 4, minWidth: 160, background: `linear-gradient(135deg, ${PINK[600]} 0%, ${PINK[500]} 100%)`, boxShadow: `0 4px 14px ${PINK[500]}50`, '&:hover': { background: `linear-gradient(135deg, ${PINK[600]} 0%, ${PINK[600]} 100%)` } }}>
+              {submitting ? <CircularProgress size={20} color="inherit" /> : videoUploading ? `Uploading video… ${videoUploadProgress}%` : isEdit ? 'Update Product' : hasSizes ? `Create ${sizeRows.length} Product${sizeRows.length > 1 ? 's' : ''}` : 'Create Product'}
             </Button>
           </Box>
         </form>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -13,12 +13,15 @@ import {
   InputAdornment,
   InputLabel,
   MenuItem,
+  Pagination,
   Select,
   Slider,
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { Filter, Package, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useSnackbar } from 'notistack';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +31,18 @@ import { ProductItem, ProductType } from '../types';
 import { BASE_URL } from '../constant';
 
 const PINK = { 600: '#C2185B', 500: '#D81B60' };
+const PAGE_SIZE = 12;
+
+function throttle<T extends (...args: unknown[]) => void>(fn: T, delay: number): T {
+  let lastCall = 0;
+  return ((...args: unknown[]) => {
+    const now = Date.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      fn(...args);
+    }
+  }) as T;
+}
 
 const TYPE_META: Record<number, { label: string; color: string }> = {
   [ProductType.REGULAR]: { label: 'Regular', color: '#1976D2' },
@@ -38,6 +53,8 @@ const TYPE_META: Record<number, { label: string; color: string }> = {
 export const AdminProducts = () => {
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
@@ -51,9 +68,15 @@ export const AdminProducts = () => {
   const [maxBound, setMaxBound] = useState(10000);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
 
+  // Desktop: page-wise pagination. Mobile: incremental "scrollable" reveal.
+  const [page, setPage] = useState(1);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
   const fetchProducts = async () => {
     try {
-      const list = await productService.getAll();
+      // Backend defaults GET /products to limit=10 when unset — request the full catalog
+      // since this admin page paginates/filters client-side.
+      const list = await productService.getAll({ limit: 10000 });
       setProducts(list);
       if (list.length > 0) {
         const max = Math.ceil(Math.max(...list.map((p) => p.price)) / 100) * 100 || 10000;
@@ -85,6 +108,52 @@ export const AdminProducts = () => {
       }),
     [products, search, selectedCategory, selectedType, priceRange]
   );
+
+  // Reset pagination whenever the filtered set changes
+  useEffect(() => {
+    setPage(1);
+    setVisibleCount(PAGE_SIZE);
+  }, [filtered.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+  const desktopPageItems = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page]
+  );
+
+  const mobileVisibleItems = useMemo(
+    () => filtered.slice(0, visibleCount),
+    [filtered, visibleCount]
+  );
+
+  const displayedProducts = isMobile ? mobileVisibleItems : desktopPageItems;
+  const hasMoreMobile = isMobile && visibleCount < filtered.length;
+
+  // Mobile: reveal more items as the user scrolls near the bottom
+  const isMobileRef = useRef(isMobile);
+  const hasMoreMobileRef = useRef(hasMoreMobile);
+  useEffect(() => { isMobileRef.current = isMobile; }, [isMobile]);
+  useEffect(() => { hasMoreMobileRef.current = hasMoreMobile; }, [hasMoreMobile]);
+
+  const handleScrollLoadMore = useRef(
+    throttle(() => {
+      if (!isMobileRef.current || !hasMoreMobileRef.current) return;
+      if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 400) {
+        setVisibleCount((c) => c + PAGE_SIZE);
+      }
+    }, 400)
+  ).current;
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScrollLoadMore);
+    return () => window.removeEventListener('scroll', handleScrollLoadMore);
+  }, [handleScrollLoadMore]);
+
+  const handleDesktopPageChange = (_: React.ChangeEvent<unknown>, pg: number) => {
+    setPage(pg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleToggleActive = async (product: ProductItem) => {
     try {
@@ -262,7 +331,7 @@ export const AdminProducts = () => {
         {/* Count */}
         {!loading && products.length > 0 && (
           <Typography fontSize={13} color="text.secondary" mb={2}>
-            Showing {filtered.length} of {products.length} products
+            Showing {displayedProducts.length} of {filtered.length} products
           </Typography>
         )}
 
@@ -330,6 +399,7 @@ export const AdminProducts = () => {
             </Button>
           </Box>
         ) : (
+          <>
           <Box
             sx={{
               display: 'grid',
@@ -342,7 +412,7 @@ export const AdminProducts = () => {
               gap: { xs: 1.5, sm: 2 },
             }}
           >
-            {filtered.map((product) => (
+            {displayedProducts.map((product) => (
               <Card
                 key={product.id}
                 elevation={0}
@@ -557,6 +627,36 @@ export const AdminProducts = () => {
               </Card>
             ))}
           </Box>
+
+          {/* Mobile: end of list message */}
+          {isMobile && !hasMoreMobile && filtered.length > PAGE_SIZE && (
+            <Typography textAlign="center" color="text.secondary" fontSize={13} py={3}>
+              You've seen all {filtered.length} products
+            </Typography>
+          )}
+
+          {/* Desktop: page-wise pagination */}
+          {!isMobile && totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handleDesktopPageChange}
+                shape="rounded"
+                sx={{
+                  '& .MuiPaginationItem-root': { fontSize: 13, fontWeight: 600 },
+                  '& .MuiPaginationItem-root.Mui-selected': {
+                    background: `linear-gradient(135deg, ${PINK[600]}, ${PINK[500]})`,
+                    color: '#fff',
+                    '&:hover': {
+                      background: `linear-gradient(135deg, ${PINK[600]}, ${PINK[500]})`,
+                    },
+                  },
+                }}
+              />
+            </Box>
+          )}
+          </>
         )}
       </Box>
 

@@ -118,6 +118,29 @@ export const productService = {
     await api.delete(`/products/${id}`);
   },
 
+  // Pre-uploads a video ahead of the product save request so the save call stays fast.
+  // Returns the Cloudinary public_id to send back in the create/update payload.
+  async uploadVideo(file: File, onProgress?: (percent: number) => void): Promise<string> {
+    const fd = new FormData();
+    fd.append('video', file);
+    const { data } = await api.post('/products/upload-video', fd, {
+      headers: multipart,
+      onUploadProgress: (evt) => {
+        if (onProgress && evt.total) {
+          onProgress(Math.round((evt.loaded / evt.total) * 100));
+        }
+      },
+    });
+    return single(data)?.publicId;
+  },
+
+  // Cleans up a pre-uploaded video that was never attached to a saved product
+  // (e.g. the admin swapped it for a different file or removed it before submitting).
+  async deleteUploadedVideo(publicId: string): Promise<void> {
+    if (!publicId) return;
+    await api.post('/products/upload-video/delete', { publicId });
+  },
+
   async toggleActive(id: string): Promise<ProductItem> {
     const { data } = await api.patch(`/products/${id}/toggle-active`);
     return normalize(single(data));

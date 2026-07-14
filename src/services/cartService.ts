@@ -54,7 +54,8 @@ export const cartService = {
     const formData = new FormData();
     formData.append('customerid', customerId);
     formData.append('productid', productId);
-    formData.append('date', details.date);
+    // Omit date when unset (e.g. "proceed without attachment") — an empty string would fail the backend's Date cast
+    if (details.date) formData.append('date', details.date);
     formData.append('description', details.description);
     details.images.forEach((file) => formData.append('images', file));
 

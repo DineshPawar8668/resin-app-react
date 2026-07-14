@@ -91,8 +91,31 @@ export const AddToCartDetailsModal = ({
     await onSubmit({ date, description, images });
   };
 
+  const handleSkip = async () => {
+    await onSubmit({ date: "", description: "", images: [] });
+  };
+
   return (
     <Dialog open={open} onClose={submitting ? undefined : onClose} maxWidth="sm" fullWidth>
+      <Button
+        onClick={handleSkip}
+        disabled={submitting}
+        size="small"
+        sx={{
+          position: "absolute",
+          top: 8,
+          left: 8,
+          zIndex: 1,
+          textTransform: "none",
+          fontSize: 12,
+          fontWeight: 700,
+          color: PINK[600],
+          px: 1,
+          "&:hover": { background: PINK[50] },
+        }}
+      >
+        Proceed without attachment
+      </Button>
       <IconButton
         onClick={onClose}
         disabled={submitting}

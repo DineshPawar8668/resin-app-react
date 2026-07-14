@@ -397,7 +397,7 @@ export const Home = () => {
           </Box>
         )}
 
-        {/* ── LUXURY COLLECTIONS (featured) ────────── */}
+        {/* ── LUXURY COLLECTIONS (featured) ──────────
         {featuredProducts.length > 0 && (
           <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 4 }, background: L.warm }}>
             <Box sx={{ maxWidth: 1280, mx: "auto" }}>
@@ -435,46 +435,7 @@ export const Home = () => {
               </Grid>
             </Box>
           </Box>
-        )}
-
-        {/* ── PROMO SPLIT BANNER ───────────────────── */}
-        <Box sx={{
-          display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-          minHeight: { xs: "auto", md: 300 },
-        }}>
-          {categories.slice(8, 14).map((cat, i) => ({
-            img: cat.image || cat.image_url || FALLBACK_BANNERS[i % FALLBACK_BANNERS.length].img,
-            tag: BANNER_TAGS[i % BANNER_TAGS.length],
-            title: cat.name,
-            sub: BANNER_SUBS[i % BANNER_SUBS.length],
-            path:cat.id
-          })).map((b, i) => (
-            <Box
-              key={i}
-              onClick={() => navigate(`/products?category=${b.path}`)}
-              sx={{
-                position: "relative", height: { xs: 200, md: 300 },
-                overflow: "hidden", cursor: "pointer",
-                "&:hover img": { transform: "scale(1.06)" },
-              }}
-            >
-              <Box
-                component="img"
-                src={b.img}
-                sx={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", display: "block" }}
-              />
-              <Box sx={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(0deg, rgba(26,10,18,0.75) 0%, rgba(26,10,18,0.1) 60%)",
-                display: "flex", flexDirection: "column", justifyContent: "flex-end",
-                p: { xs: 2.5, md: 3.5 },
-              }}>
-                <Chip label={b.tag} size="small" sx={{ background: L.rose, color: "#fff", fontWeight: 700, fontSize: 10, width: "fit-content", mb: 1 }} />
-              </Box>
-            </Box>
-          ))}
-        </Box>
-
+        )} */}
         {/* ── POPULAR PRODUCTS (all/deals) ─────────── */}
         {deals.length > 0 && (
           <Box sx={{ py: { xs: 4, md: 6 }, px: { xs: 2, md: 4 } }}>
@@ -514,6 +475,45 @@ export const Home = () => {
             </Box>
           </Box>
         )}
+        {/* ── PROMO SPLIT BANNER ───────────────────── */}
+        <Box sx={{
+          display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          minHeight: { xs: "auto", md: 300 },
+        }}>
+          {categories.slice(8, 14).map((cat, i) => ({
+            img: cat.image || cat.image_url || FALLBACK_BANNERS[i % FALLBACK_BANNERS.length].img,
+            tag: BANNER_TAGS[i % BANNER_TAGS.length],
+            title: cat.name,
+            sub: BANNER_SUBS[i % BANNER_SUBS.length],
+            path:cat.id
+          })).map((b, i) => (
+            <Box
+              key={i}
+              onClick={() => navigate(`/products?category=${b.path}`)}
+              sx={{
+                position: "relative", height: { xs: 200, md: 300 },
+                overflow: "hidden", cursor: "pointer",
+                "&:hover img": { transform: "scale(1.06)" },
+              }}
+            >
+              <Box
+                component="img"
+                src={b.img}
+                sx={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease", display: "block" }}
+              />
+              <Box sx={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(0deg, rgba(26,10,18,0.75) 0%, rgba(26,10,18,0.1) 60%)",
+                display: "flex", flexDirection: "column", justifyContent: "flex-end",
+                p: { xs: 2.5, md: 3.5 },
+              }}>
+                <Chip label={b.tag} size="small" sx={{ background: L.rose, color: "#fff", fontWeight: 700, fontSize: 10, width: "fit-content", mb: 1 }} />
+              </Box>
+            </Box>
+          ))}
+        </Box>
+
+
 
         {/* ── BEST DEALS ───────────────────────────── */}
         {bestDeals.length > 0 && (
